@@ -1,12 +1,7 @@
 package com.baloise.maven.orchestra;
 
-import static java.lang.String.format;
-
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.StringReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,10 +10,11 @@ import java.util.Base64;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.codehaus.plexus.util.IOUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
+import static com.baloise.maven.orchestra.HTTP.*;
+
 
 public class OrchestraClient {
 
@@ -31,25 +27,6 @@ public class OrchestraClient {
 	public OrchestraClient(URL url, String usr, String pwd) {
 		this.url = url +"/DeploymentService/Service";
 		auth = "Basic " + Base64.getEncoder().encodeToString((usr+":"+pwd).getBytes());
-	}
-
-	String post(String url, String auth, Entity entity) throws IOException {
-		HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
-		con.setRequestProperty("Authorization", auth);
-		con.setRequestMethod("POST");
-		con.setRequestProperty("Content-Type", "text/xml;charset=UTF-8");
-		con.setDoOutput(true);
-		try(OutputStream out = con.getOutputStream()) {			
-			entity.writeTo(out);
-		}
-		int code = con.getResponseCode();
-		String resp;
-		try(InputStream out = con.getInputStream()) {			
-			resp = IOUtil.toString(con.getInputStream());
-		}
-		if(code >=300) 
-			throw new IOException(format("response code %s : " + resp, code));
-		return resp;
 	}
 
 	void aquireDeploymentToken() throws IOException {
