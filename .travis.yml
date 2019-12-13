@@ -1,0 +1,9 @@
+language: java
+script: mvn  --settings .travis.settings.xml clean deploy
+cache:
+  directories:
+  - .autoconf
+  - $HOME/.m2
+ branches:
+  only:
+  - release
