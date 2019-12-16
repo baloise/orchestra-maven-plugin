@@ -30,9 +30,9 @@
 		</developer>
 	</developers>
 	<scm>
-		<connection>scm:git:https://github.com/baloise/jenkins-maven-plugin.git</connection>
-		<developerConnection>scm:git:https://github.com/baloise/jenkins-maven-plugin.git</developerConnection>
-		<url>https://github.com/baloise/jenkins-maven-plugin.git</url>
+		<connection>scm:git:https://github.com/baloise/orchestra-maven-plugin.git</connection>
+		<developerConnection>scm:git:https://github.com/baloise/orchestra-maven-plugin.git</developerConnection>
+		<url>https://github.com/baloise/orchestra-maven-plugin.git</url>
 	</scm>
 
 	<distributionManagement>
