@@ -35,6 +35,14 @@
 		<url>https://github.com/baloise/jenkins-maven-plugin.git</url>
 	</scm>
 
+	<distributionManagement>
+		<repository>
+			<id>bintray-baopso-mvn</id>
+			<name>baopso-mvn</name>
+			<url>https://api.bintray.com/maven/baopso/mvn/jenkins-maven-plugin/;publish=1</url>
+		</repository>
+	</distributionManagement>
+
   <prerequisites>
     <maven>${maven.version}</maven>
   </prerequisites>
