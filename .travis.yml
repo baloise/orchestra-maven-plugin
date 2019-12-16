@@ -4,6 +4,6 @@ cache:
   directories:
   - .autoconf
   - $HOME/.m2
- branches:
+branches:
   only:
   - release
