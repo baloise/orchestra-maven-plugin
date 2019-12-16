@@ -145,7 +145,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-plugin-plugin</artifactId>
-        <version>3.6.0</version>
         <configuration>
           <!-- <goalPrefix>maven-archetype-plugin</goalPrefix> -->
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
@@ -165,6 +164,18 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-source-plugin</artifactId>
+		<executions>
+			<execution>
+				<id>attach-sources</id>
+				<goals>
+					<goal>jar</goal>
+				</goals>
+			</execution>
+		</executions>
+	  </plugin>
     </plugins>
   </build>
 
