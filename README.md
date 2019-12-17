@@ -37,7 +37,7 @@ Add the following to your *~/.m2/settings.xml*
 
 now you can use somthing like
 
-`> mvn orchestra:deploy`
+`> mvn orchestra:deploy -Dscenario=path\to\scenario -Dserver=https://orchestra.mycorp.com:9443`
 
 [(tell me more)](http://maven.apache.org/guides/introduction/introduction-to-plugin-prefix-mapping.html#Configuring_Maven_to_Search_for_Plugins)
 
