@@ -1,9 +1,11 @@
 language: java
-script: mvn  --settings .travis.settings.xml clean deploy
+env:
+  - JAVA_OPTS=-Dfile.encoding=cp1252
 cache:
   directories:
   - .autoconf
   - $HOME/.m2
+script: mvn  --settings .travis.settings.xml clean deploy
 branches:
   only:
   - release
