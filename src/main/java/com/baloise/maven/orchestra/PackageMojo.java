@@ -2,6 +2,10 @@ package com.baloise.maven.orchestra;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -20,9 +24,6 @@ public class PackageMojo extends AbstractMojo {
 	@Parameter(defaultValue = "${project.build.directory}", property = "outputDir", required = true)
 	private File outputDirectory;
 
-	@Parameter(defaultValue = "${project.groupId}", property = "groupId", required = true)
-	private String groupId;
-
 	@Parameter(defaultValue = "${project.artifactId}", property = "artifactId", required = true)
 	private String artifactId;
 
@@ -31,16 +32,33 @@ public class PackageMojo extends AbstractMojo {
 
 	public void execute() throws MojoExecutionException {
 		try {
-			System.out.println(groupId);
+			System.out.println(outputDirectory);
 			System.out.println(artifactId);
 			System.out.println(version);
-			File orchestraSrc = new File("src/main/orchestra", artifactId);
+			File orchestraSrc = detectSourceFolder();
 			if (!orchestraSrc.isDirectory())
 				throw new IOException(orchestraSrc.getAbsolutePath() + " is not a directory");
-			File targetFile = new File(outputDirectory, artifactId + "-" + version + ".zip");
+			File targetFile = new File(outputDirectory, artifactId + "-" + version + ".psc");
 			PSCHelper.createPscFile(orchestraSrc, targetFile, artifactId);
 		} catch (IOException e) {
 			throw new MojoExecutionException(e.getMessage(), e);
 		}
+	}
+
+	public File detectSourceFolder() throws IOException {
+		if(hasPom()) {
+			return new File("src/main/orchestra", artifactId);
+		}
+		return Files
+					.walk(Paths.get("."), 4)
+					.filter(p -> p.getFileName().toString().equals("props"))
+					.findAny()
+					.map(Path::getParent)
+					.orElseThrow(IOException::new)
+					.toFile();
+	}
+	
+	private boolean hasPom() {
+		return artifactId != null && !"standalone-pom".equalsIgnoreCase(artifactId);
 	}
 }
