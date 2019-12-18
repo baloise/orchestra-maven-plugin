@@ -1,13 +1,15 @@
 package com.baloise.maven.orchestra;
 
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toSet;
+
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.nio.file.Files;
+import java.util.Optional;
 import java.util.Properties;
-import java.util.function.Consumer;
+import java.util.Set;
 
 import javax.xml.ws.BindingProvider;
 
@@ -19,6 +21,7 @@ import emds.epi.decl.server.deployment.deploymentservice.DeployScenarioCallbackR
 import emds.epi.decl.server.deployment.deploymentservice.DeploymentService;
 import emds.epi.decl.server.deployment.deploymentservice.DeploymentServicePort;
 import emds.epi.decl.server.deployment.deploymentservice.EmdsEpiDeclBasedataScenarioIdentifier;
+import emds.epi.decl.server.deployment.deploymentservice.EmdsEpiDeclServerDeploymentDataDeploymentInfo;
 import emds.epi.decl.server.deployment.deploymentservice.EmdsEpiDeclServerDeploymentDataDeploymentToken;
 import emds.epi.decl.server.deployment.deploymentservice.FreeDeploymentTokenRequest;
 import emds.epi.decl.server.deployment.deploymentservice.GetDeploymentInfoRequest;
@@ -31,17 +34,28 @@ public class DeployHelper {
 
 	private DeploymentServicePort port;
 	private EmdsEpiDeclServerDeploymentDataDeploymentToken token;
-
-	private URL keepCompilerHappy(URI orchestraServer) {
+	private int retryCount = 30;
+	private long retryDeplayMillies = 1000;
+	
+	
+	@FunctionalInterface
+	private static interface Lambda<T> {
+	    T call() throws Exception;
+	}
+	
+	private static <T> T keepCompilerHappy(Lambda<T> p) {
 		try {
-			return orchestraServer.resolve("/OrchestraRemoteService/DeploymentService/Service?wsdl").toURL();
-		} catch (MalformedURLException e) {
+			return p.call();
+		} catch (Exception e) {
 			throw new IllegalArgumentException(e);
 		}
 	}
 
+	public DeployHelper(String user, String password, String orchestraHost) {
+		this(user, password, keepCompilerHappy(()->new URI(format("http://%s:8019", orchestraHost))));
+	}
 	public DeployHelper(String user, String password, URI orchestraServer) {
-		DeploymentService dserv = new DeploymentService(keepCompilerHappy(orchestraServer));
+		DeploymentService dserv = new DeploymentService(keepCompilerHappy(()-> orchestraServer.resolve("/OrchestraRemoteService/DeploymentService/Service?wsdl").toURL())) ;
 		port = dserv.getPort(DeploymentServicePort.class);
 
 		BindingProvider prov = (BindingProvider) port;
@@ -52,6 +66,17 @@ public class DeployHelper {
 
 	public void deploy(File psc) throws IOException {
 		deploy(psc, false);
+	}
+	
+
+	public DeployHelper withRetryCount(int retryCount) {
+		this.retryCount = retryCount;
+		return this;
+	}
+
+	public DeployHelper withRetryDeplayMillies(long retryDeplayMillies) {
+		this.retryDeplayMillies = retryDeplayMillies;
+		return this;
 	}
 
 	public void deploy(File psc, boolean autostart) throws IOException {
@@ -65,24 +90,17 @@ public class DeployHelper {
 				wasRunning = isStarted(uuid);
 				if (wasRunning)
 					stopScenario(uuid);
-				putdeploy(port::reDeployScenarioCallback, createRedeployRequest(psc));
+				requestRedeploy(psc);
 			} else {
-				putdeploy(port::deployScenarioCallback, createDeployRequest(psc));
+				requestDeploy(psc);
 			}
-			if (autostart || wasRunning)
+			if (autostart || wasRunning) 
 				startScenario(uuid);
 		} finally {
 			port.freeDeploymentToken(new FreeDeploymentTokenRequest().withToken(token));
 		}
 	}
 
-	private ReDeployScenarioCallbackRequest createRedeployRequest(File psc) throws IOException {
-		return new ReDeployScenarioCallbackRequest().withToken(token).withSerializedScenario(Files.readAllBytes(psc.toPath()));
-	}
-
-	private DeployScenarioCallbackRequest createDeployRequest(File psc) throws IOException {
-		return new DeployScenarioCallbackRequest().withToken(token).withSerializedScenario(Files.readAllBytes(psc.toPath()));
-	}
 
 	private void stopScenario(String uuid) {
 		port.deActivateScenario(new DeActivateScenarioRequest().withToken(token).withScenarioID(new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(uuid)));
@@ -103,9 +121,47 @@ public class DeployHelper {
 	}
 	
 
-	private <T> void putdeploy(Consumer<T> deployOrRedeploy, T request) {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+	private void requestDeploy(File psc) throws IOException {
+		port.deployScenarioCallback(
+				new DeployScenarioCallbackRequest()
+					.withToken(token)
+					.withSerializedScenario(Files.readAllBytes(psc.toPath()))
+				);
+		waitForDeploy();
+		
+	}
+	
+	private void requestRedeploy(File psc) throws IOException {
+		port.reDeployScenarioCallback(
+				new ReDeployScenarioCallbackRequest()
+				.withToken(token)
+				.withSerializedScenario(Files.readAllBytes(psc.toPath()))
+				);
+		waitForDeploy();
+	}
+	
+
+	private void waitForDeploy() throws IOException {
+        int retry = retryCount;
+		while(retry>0) {
+	        GetDeploymentInfoResponse info = getDeploymentInfo();
+	        Set<String> descs = info.getResult().stream().map(EmdsEpiDeclServerDeploymentDataDeploymentInfo::getDescription).collect(toSet());
+	        if(descs.contains("Redeployment finished."))
+	        	return;
+	        if(descs.stream().filter(i->i.contains("currently not allowed")).findAny().isPresent()) {
+	        	System.out.println(format("waiting for deployment to finish : %s attempts left ", retry));
+	        	retry--;
+	        	try {
+	        		Thread.sleep(retryDeplayMillies);
+	        	} catch (InterruptedException wakeUp) {
+	        	}
+	        }
+	        Optional<String> failure = descs.stream().filter(i->i.startsWith("Redeployment failed") && !i.endsWith(":  null")).findAny();
+			if(failure.isPresent()) {
+	        	throw new IOException(failure.get());	        	
+	        }
+		}
+		throw new IOException(format("no success message from orchestra after %s attempts", retryCount));
 	}
 
 	private boolean isStarted(String uuid) {
