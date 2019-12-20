@@ -64,14 +64,6 @@
 		</dependency>
 
 		<dependency>
-			<!-- TODO can we replace / skip this? -->
-			<groupId>com.sun.xml.ws</groupId>
-			<artifactId>jaxws-rt</artifactId>
-			<version>2.3.3-b01</version>
-			<scope>provided</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>com.sun.xml.ws</groupId>
 			<artifactId>rt</artifactId>
 			<version>2.3.1</version>
