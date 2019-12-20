@@ -8,7 +8,7 @@
 
 	<groupId>com.baloise.maven</groupId>
 	<artifactId>orchestra-maven-plugin</artifactId>
-	<version>0.1.3</version>
+	<version>0.1.3-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>orchestra-maven-plugin Maven Plugin</name>
@@ -57,7 +57,7 @@
 	</properties>
 
 	<dependencies>
-		<dependency>
+			<dependency>
 			<groupId>javax.xml</groupId>
 			<artifactId>jaxrpc-api</artifactId>
 			<version>1.1</version>
@@ -71,6 +71,11 @@
 			<scope>provided</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>com.sun.xml.ws</groupId>
+			<artifactId>rt</artifactId>
+			<version>2.3.1</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.cxf.xjc-utils</groupId>
@@ -120,6 +125,57 @@
 			<artifactId>maven-plugin-testing-harness</artifactId>
 			<version>3.3.0</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jaxb</groupId>
+			<artifactId>jaxb-runtime</artifactId>
+			<version>2.3.3-b02</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.glassfish.jaxb</groupId>
+					<artifactId>txw2</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>javax.xml.ws</groupId>
+			<artifactId>jaxws-api</artifactId>
+			<version>2.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.xml.soap</groupId>
+			<artifactId>javax.xml.soap-api</artifactId>
+			<version>1.4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.xml.stream.buffer</groupId>
+			<artifactId>streambuffer</artifactId>
+			<version>1.5.8</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.xml.ws</groupId>
+			<artifactId>policy</artifactId>
+			<version>2.7.9</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jvnet.staxex</groupId>
+			<artifactId>stax-ex</artifactId>
+			<version>1.8.2</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.jws</groupId>
+			<artifactId>javax.jws-api</artifactId>
+			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.xml.messaging.saaj</groupId>
+			<artifactId>saaj-impl</artifactId>
+			<version>1.5.2-b01</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.gmbal</groupId>
+			<artifactId>gmbal-api-only</artifactId>
+			<version>3.1.0-b001</version>
 		</dependency>
 	</dependencies>
 
@@ -171,7 +227,6 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-plugin-plugin</artifactId>
 				<configuration>
-					<!-- <goalPrefix>maven-archetype-plugin</goalPrefix> -->
 					<skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
 				</configuration>
 				<executions>
@@ -203,7 +258,6 @@
 				</executions>
 			</plugin>
 
-
 			<plugin>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-codegen-plugin</artifactId>
@@ -219,12 +273,11 @@
 									<extraarg>-xjc-Xfluent-api</extraarg>
 								</extraargs>
 							</defaultOptions>
-							<sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
-							<wsdlOptions>
-								<wsdlOption>
-									<wsdl>${basedir}/src/main/wsdl/orchestra.wsdl</wsdl>
-								</wsdlOption>
-							</wsdlOptions>
+							<sourceRoot>${project.build.directory}/generated-sources</sourceRoot>
+							<wsdlRoot>${basedir}/src/main/resources</wsdlRoot>
+							  <includes>
+							      <include>*.wsdl</include>
+							  </includes>
 						</configuration>
 						<goals>
 							<goal>wsdl2java</goal>
@@ -257,7 +310,7 @@
 						</goals>
 						<configuration>
 							<sources>
-								<source>${project.build.directory}/generated-sources/cxf</source>
+								<source>${project.build.directory}/generated-sources</source>
 							</sources>
 						</configuration>
 					</execution>
@@ -321,10 +374,10 @@
 								</goals>
 								<configuration>
 									<tasks>
-										<mkdir dir="${basedir}/src/main/wsdl" />
+										<mkdir dir="${basedir}/src/main/resources" />
 										<get
 											src="${orchestra.soapclient.orchestraurl}OrchestraRemoteService/DeploymentService/Service?wsdl"
-											dest="${basedir}/src/main/wsdl/orchestra.wsdl" />
+											dest="${basedir}/src/main/resources/orchestra.wsdl" />
 									</tasks>
 								</configuration>
 							</execution>
