@@ -1,11 +1,15 @@
 package com.baloise.maven.orchestra;
 
+import static com.baloise.maven.orchestra.MojoHelper.ajustOutputDir;
+import static com.baloise.maven.orchestra.MojoHelper.getPscFileLocation;
+import static com.baloise.maven.orchestra.MojoHelper.hasPom;
+import static java.lang.String.format;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -13,16 +17,14 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
-/**
- * Goal which touches a timestamp file.
- */
 @Mojo(name = "scenario-package", defaultPhase = LifecyclePhase.PACKAGE, requiresProject = false)
 public class PackageMojo extends AbstractMojo {
-	/**
-	 * Location of the file.
-	 */
+	
 	@Parameter(defaultValue = "${project.build.directory}", property = "outputDir", required = true)
 	private File outputDirectory;
+	
+	@Parameter(property = "pscFile", required = false)
+	private File pscFile;
 
 	@Parameter(defaultValue = "${project.artifactId}", property = "artifactId", required = true)
 	private String artifactId;
@@ -31,34 +33,35 @@ public class PackageMojo extends AbstractMojo {
 	private String version;
 
 	public void execute() throws MojoExecutionException {
+		outputDirectory  = ajustOutputDir(outputDirectory, getLog());
 		try {
-			System.out.println(outputDirectory);
-			System.out.println(artifactId);
-			System.out.println(version);
 			File orchestraSrc = detectSourceFolder();
 			if (!orchestraSrc.isDirectory())
 				throw new IOException(orchestraSrc.getAbsolutePath() + " is not a directory");
-			File targetFile = new File(outputDirectory, artifactId + "-" + version + ".psc");
-			PSCHelper.createPscFile(orchestraSrc, targetFile, artifactId);
+			File pscFileLocation = getPscFileLocation(outputDirectory, artifactId, version, pscFile);
+			getLog().info(format("packaging %s to %s", orchestraSrc, pscFileLocation));
+			PSCHelper.createPscFile(orchestraSrc, pscFileLocation, artifactId);
 		} catch (IOException e) {
 			throw new MojoExecutionException(e.getMessage(), e);
 		}
 	}
 
 	public File detectSourceFolder() throws IOException {
+		File defaultSource = new File("src/main/orchestra");
 		if(hasPom()) {
-			return new File("src/main/orchestra", artifactId);
+			File ret = new File(defaultSource, artifactId);
+			if(ret.isDirectory()) 
+				return ret;
+			else 
+				getLog().warn(format("expected orchestra sources not found @ %s. running autodetection",ret));
 		}
+		Path path = defaultSource.isDirectory()? defaultSource.toPath()  : Paths.get(".");
 		return Files
-					.walk(Paths.get("."), 4)
+					.walk(path, 4)
 					.filter(p -> p.getFileName().toString().equals("props"))
 					.findAny()
 					.map(Path::getParent)
 					.orElseThrow(IOException::new)
 					.toFile();
-	}
-	
-	private boolean hasPom() {
-		return artifactId != null && !"standalone-pom".equalsIgnoreCase(artifactId);
 	}
 }
