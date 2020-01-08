@@ -7,8 +7,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.xml.ws.BindingProvider;
@@ -82,8 +84,7 @@ public class DeployHelper {
 	public void deploy(File psc, boolean autostart) throws IOException {
 		AquireDeploymentTokenResponse deploymentToken = port.aquireDeploymentToken(new AquireDeploymentTokenRequest());
 		token = deploymentToken.getResult();
-		Properties properties = PSCHelper.getScenarioProperties(psc);
-		String uuid = properties.getProperty("UUID");
+		String uuid = PSCHelper.getScenarioId(psc);
 		try {
 			boolean wasRunning = false;
 			if (isDeployed(uuid)) {
@@ -126,9 +127,9 @@ public class DeployHelper {
 				new DeployScenarioCallbackRequest()
 					.withToken(token)
 					.withSerializedScenario(Files.readAllBytes(psc.toPath()))
+					.withComment(format("deployed %s", new Date()))
 				);
-		waitForDeploy();
-		
+		waitForRedeploy("Deployment finished without errors");
 	}
 	
 	private void requestRedeploy(File psc) throws IOException {
@@ -136,39 +137,47 @@ public class DeployHelper {
 				new ReDeployScenarioCallbackRequest()
 				.withToken(token)
 				.withSerializedScenario(Files.readAllBytes(psc.toPath()))
+				.withComment(format("redeployed %s", new Date()))
 				);
-		waitForDeploy();
+		waitForRedeploy("Redeployment finished.");
 	}
 	
+	private void sleep() {
+		try {
+			Thread.sleep(retryDeplayMillies);
+		} catch (InterruptedException wakeUp) {
+		}
+	}
 
-	private void waitForDeploy() throws IOException {
+	private void waitForRedeploy(String successMessage) throws IOException {
         int retry = retryCount;
-		while(retry>0) {
+        List<EmdsEpiDeclServerDeploymentDataDeploymentInfo> res = null;
+        while(retry>0) {
 	        GetDeploymentInfoResponse info = getDeploymentInfo();
-	        Set<String> descs = info.getResult().stream().map(EmdsEpiDeclServerDeploymentDataDeploymentInfo::getDescription).collect(toSet());
-	        if(descs.contains("Redeployment finished."))
+	        res = info.getResult();
+	        Set<String> descs = res.stream().map(EmdsEpiDeclServerDeploymentDataDeploymentInfo::getDescription).collect(toSet());
+	        if(descs.contains(successMessage))
 	        	return;
-	        if(descs.stream().filter(i->i.contains("currently not allowed")).findAny().isPresent()) {
-	        	System.out.println(format("waiting for deployment to finish : %s attempts left ", retry));
-	        	retry--;
-	        	try {
-	        		Thread.sleep(retryDeplayMillies);
-	        	} catch (InterruptedException wakeUp) {
-	        	}
-	        }
 	        Optional<String> failure = descs.stream().filter(i->i.startsWith("Redeployment failed") && !i.endsWith(":  null")).findAny();
-			if(failure.isPresent()) {
+	        if(failure.isPresent()) {
 	        	throw new IOException(failure.get());	        	
 	        }
+        	System.out.println(format("waiting for deployment to finish : %s attempts left ", retry));
+        	retry--;
+        	sleep();
 		}
-		throw new IOException(format("no success message from orchestra after %s attempts", retryCount));
+        if(res != null) {
+        	res.stream().sorted(Comparator.comparing(EmdsEpiDeclServerDeploymentDataDeploymentInfo::getDate))
+        	.forEach(System.out::println);
+        }
+        throw new IOException(format("no success message from orchestra after %s attempts", retryCount));
 	}
 
 	private boolean isStarted(String uuid) {
 		return getScenarioInfo(uuid).getResult().getActive();
 	}
 
-	private boolean isDeployed(String uuid) {
+	boolean isDeployed(String uuid) {
 		return getScenarioInfo(uuid).getResult() != null;
 	}
 

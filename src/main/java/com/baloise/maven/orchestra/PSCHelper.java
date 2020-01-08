@@ -43,6 +43,9 @@ public class PSCHelper {
 		}
 	}
 
+	public static String getScenarioId(File psc) throws IOException {
+		return getScenarioProperties(psc).getProperty("UUID");
+	}
 	public static Properties getScenarioProperties(File psc) throws IOException {
 		try (ZipFile zipFile = new ZipFile(psc)) {
 			ZipEntry entry = zipFile.getEntry("props");
