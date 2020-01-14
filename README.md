@@ -49,3 +49,13 @@ Of course you have all the options as where to set the properties
 ... to be completed
 
 [![Build Status](https://travis-ci.org/baloise/jenkins-maven-plugin.svg)](https://travis-ci.org/baloise/orchestra-maven-plugin)
+
+
+## I don't want to use maven
+
+You can just reuse the soap client and helper methods in a small library without dependencies on maven, i.e
+
+https://dl.bintray.com/baopso/mvn/com/baloise/maven/orchestra-maven-plugin/0.1.6/orchestra-maven-plugin-0.1.6-lib.jar
+
+... to be completed
+
