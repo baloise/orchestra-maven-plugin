@@ -12,6 +12,8 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import com.baloise.orchestra.DeployHelper;
+
 @Mojo(name = "scenario-deploy", defaultPhase = LifecyclePhase.NONE, requiresProject = false)
 public class DeployMojo extends AbstractMojo {
 	

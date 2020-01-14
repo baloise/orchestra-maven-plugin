@@ -1,4 +1,4 @@
-package com.baloise.maven.orchestra;
+package com.baloise.orchestra;
 
 import java.io.DataOutputStream;
 import java.io.File;

@@ -67,7 +67,7 @@
 			<artifactId>javax.jws</artifactId>
 			<version>3.1.1</version>
 		</dependency>
-		
+
 
 		<dependency>
 			<groupId>org.apache.cxf.xjc-utils</groupId>
@@ -148,7 +148,7 @@
 				</plugin>
 				<plugin>
 					<artifactId>maven-jar-plugin</artifactId>
-					<version>3.0.2</version>
+					<version>3.2.0</version>
 				</plugin>
 				<plugin>
 					<artifactId>maven-install-plugin</artifactId>
@@ -259,9 +259,25 @@
 					</execution>
 				</executions>
 			</plugin>
-
-
-
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<classifier>lib</classifier>
+							<includes>
+								<include>emds/**/*</include>
+								<include>com/baloise/orchestra/**/*</include>
+							</includes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 

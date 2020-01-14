@@ -17,6 +17,8 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 
+import com.baloise.orchestra.PSCHelper;
+
 @Mojo(name = "scenario-package", defaultPhase = LifecyclePhase.PACKAGE, requiresProject = false)
 public class PackageMojo extends AbstractMojo {
 	

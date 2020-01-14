@@ -1,4 +1,4 @@
-package com.baloise.maven.orchestra;
+package com.baloise.orchestra;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;

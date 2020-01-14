@@ -1,7 +1,7 @@
-package com.baloise.maven.orchestra;
+package com.baloise.orchestra;
 
 import static org.junit.Assert.assertTrue;
-import static com.baloise.maven.orchestra.DeployHelper.isSuccess;
+import static com.baloise.orchestra.DeployHelper.isSuccess;
 import static org.junit.Assert.assertFalse;
 
 import org.junit.Test;
