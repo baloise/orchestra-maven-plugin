@@ -129,7 +129,7 @@ public class DeployHelper {
 					.withSerializedScenario(Files.readAllBytes(psc.toPath()))
 					.withComment(format("deployed %s", new Date()))
 				);
-		waitForRedeploy("Deployment finished without errors");
+		waitForRedeploy("Deployment");
 	}
 	
 	private void requestRedeploy(File psc) throws IOException {
@@ -139,7 +139,7 @@ public class DeployHelper {
 				.withSerializedScenario(Files.readAllBytes(psc.toPath()))
 				.withComment(format("redeployed %s", new Date()))
 				);
-		waitForRedeploy("Redeployment finished.");
+		waitForRedeploy("Redeployment");
 	}
 	
 	private void sleep() {
@@ -147,6 +147,12 @@ public class DeployHelper {
 			Thread.sleep(retryDeplayMillies);
 		} catch (InterruptedException wakeUp) {
 		}
+	}
+	
+	static boolean isSuccess(String description, String message) {
+		if(description.equals(message+" finished.")) return true;
+		if(description.equals(message+" finished without errors")) return true;
+		return false;
 	}
 
 	private void waitForRedeploy(String successMessage) throws IOException {
@@ -156,7 +162,7 @@ public class DeployHelper {
 	        GetDeploymentInfoResponse info = getDeploymentInfo();
 	        res = info.getResult();
 	        Set<String> descs = res.stream().map(EmdsEpiDeclServerDeploymentDataDeploymentInfo::getDescription).collect(toSet());
-	        if(descs.contains(successMessage))
+	        if(descs.stream().filter(d -> isSuccess(d, successMessage)).findAny().isPresent())
 	        	return;
 	        Optional<String> failure = descs.stream().filter(i->i.startsWith("Redeployment failed") && !i.endsWith(":  null")).findAny();
 	        if(failure.isPresent()) {
