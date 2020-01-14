@@ -336,7 +336,12 @@
 										<mkdir dir="${basedir}/src/main/resources" />
 										<get
 											src="${orchestra.soapclient.orchestraurl}OrchestraRemoteService/DeploymentService/Service?wsdl"
-											dest="${basedir}/src/main/resources/orchestra.wsdl" />
+											dest="${basedir}/src/main/resources/DeploymentService.wsdl" />
+										<!-- 
+										<get
+											src="${orchestra.soapclient.orchestraurl}OrchestraRemoteService/LandscapeAdmin/Service?wsdl"
+											dest="${basedir}/src/main/resources/LandscapeAdmin.wsdl" />
+										 -->
 									</tasks>
 								</configuration>
 							</execution>
