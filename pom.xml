@@ -215,7 +215,7 @@
 									<extraarg>-xjc-Xfluent-api</extraarg>
 								</extraargs>
 							</defaultOptions>
-							<sourceRoot>${project.build.directory}/generated-sources</sourceRoot>
+							<sourceRoot>${project.build.directory}/generated-sources/wsdl</sourceRoot>
 							<wsdlRoot>${basedir}/src/main/resources</wsdlRoot>
 							<includes>
 								<include>*.wsdl</include>
@@ -252,7 +252,8 @@
 						</goals>
 						<configuration>
 							<sources>
-								<source>${project.build.directory}/generated-sources</source>
+								<source>${project.build.directory}/generated-sources/wsdl</source>
+								<source>${project.build.directory}/generated-sources/plugin</source>
 							</sources>
 						</configuration>
 					</execution>
