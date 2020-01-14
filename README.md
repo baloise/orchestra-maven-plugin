@@ -23,7 +23,7 @@ Prerequisite
 </pluginRepository>
 ```
 
-... to be cmpleted
+... to be completed
 
 ## Make your life easier with plugin groups
 
@@ -35,7 +35,7 @@ Add the following to your *~/.m2/settings.xml*
 </pluginGroups>
 ```
 
-now you can use somthing like
+now you can use something like
 
 `> mvn orchestra:deploy -Dscenario=path\to\scenario -Dserver=https://orchestra.mycorp.com:9443`
 
@@ -46,6 +46,6 @@ now you can use somthing like
 Of course you have all the options as where to set the properties
 [(tell me more)](http://docs.codehaus.org/display/MAVENUSER/MavenPropertiesGuide)
 
-... to be cmpleted
+... to be completed
 
-[![Build Status](https://travis-ci.org/baloise/jenkins-maven-plugin.svg)](https://travis-ci.org/baloise/orchstra-maven-plugin)
+[![Build Status](https://travis-ci.org/baloise/jenkins-maven-plugin.svg)](https://travis-ci.org/baloise/orchestra-maven-plugin)
