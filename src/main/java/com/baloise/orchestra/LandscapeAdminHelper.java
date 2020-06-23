@@ -3,9 +3,16 @@ package com.baloise.orchestra;
 import static java.lang.String.format;
 
 import java.net.URI;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.xml.ws.BindingProvider;
+
+import org.apache.commons.configuration2.INIConfiguration;
+import org.apache.commons.configuration2.SubnodeConfiguration;
 
 import emds.epi.decl.server.landscape.landscapeadministration.EmdsEpiDeclBasedataScenarioIdentifier;
 import emds.epi.decl.server.landscape.landscapeadministration.EmdsEpiDeclServerLandscapeDataLandscapeEntryValue;
@@ -16,13 +23,11 @@ import emds.epi.decl.server.landscape.landscapeadministration.GetLandscapeDataRe
 import emds.epi.decl.server.landscape.landscapeadministration.GetLandscapeDataResponse;
 import emds.epi.decl.server.landscape.landscapeadministration.LandscapeAdministration;
 import emds.epi.decl.server.landscape.landscapeadministration.LandscapeAdministrationPort;
+import emds.epi.decl.server.landscape.landscapeadministration.StoreLandscapeDataRequest;
 
 public class LandscapeAdminHelper {
 
 	private LandscapeAdministrationPort port;
-	//private EmdsEpiDeclServerDeploymentDataDeploymentToken token;
-	private int retryCount = 30;
-	private long retryDeplayMillies = 1000;
 	private Consumer<Object> log;
 	
 	
@@ -52,32 +57,53 @@ public class LandscapeAdminHelper {
 		log = System.out::println;
 	}
 	
-	private EmdsEpiDeclServerLandscapeDataLandscapeEntryValue info2value(EmdsEpiDeclServerLandscapeDataLandscapeInfo info) {
-		EmdsEpiDeclServerLandscapeDataLandscapeEntryValue value = new EmdsEpiDeclServerLandscapeDataLandscapeEntryValue();
-		value.setDescription(info.getEntryDescription());
-		value.setName(info.getEntryName());
-//		value.setType(info.get);
-		return value;
-	}
-	public void foo() {
-		GetLandcapeInfoRequest request = new GetLandcapeInfoRequest();
-		EmdsEpiDeclBasedataScenarioIdentifier scenario = new EmdsEpiDeclBasedataScenarioIdentifier().withScenario("0246f9e6-b338-4602-955a-7b4d74f76ce9");
-		request.setScenario(scenario);
-		GetLandcapeInfoResponse landcapeInfo = port.getLandcapeInfo(request);
-		System.out.println(landcapeInfo);
-		landcapeInfo.getResult().stream().forEach(info -> System.out.println(info));
+	public void deploy(String scenarioId, INIConfiguration ini) {
+		EmdsEpiDeclBasedataScenarioIdentifier scenario = new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(scenarioId);
 		
-//		GetLandscapeDataRequest dataRequest = new GetLandscapeDataRequest();
-//		dataRequest.setScenarioID(scenario);
-//		dataRequest.setRefence("");
-//		GetLandscapeDataResponse landscapeDataResponse = port.getLandscapeData(dataRequest);
+		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info = getLandscapeInfo(scenario);
 		
-//		StoreLandscapeDataRequest touchParameter = new StoreLandscapeDataRequest();
-//		EmdsEpiDeclServerLandscapeDataLandscapeEntryValue value = new EmdsEpiDeclServerLandscapeDataLandscapeEntryValue();
-//		value.set
-//		touchParameter.getData().add(value );
-//		port.storeLandscapeData(touchParameter);
+		for( String landscapeEntryName :ini.getSections()) {
+			log.accept("configuring " + landscapeEntryName);
+			storeLandscapeData(scenario, info, landscapeEntryName, ini.getSection(landscapeEntryName));
+		}
 	}
 	
+	
+	public Consumer<Object> getLog() {
+		return log;
+	}
+	
+	private void storeLandscapeData(EmdsEpiDeclBasedataScenarioIdentifier scenario,
+			Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info, String landscapeEntryName,
+			SubnodeConfiguration landscapeEntryValues) {
+		
+		EmdsEpiDeclServerLandscapeDataLandscapeInfo theInfo = info.get(landscapeEntryName);
+		GetLandscapeDataRequest dataRequest = new GetLandscapeDataRequest().withScenarioID(scenario).withReference(theInfo.getReference());
+		GetLandscapeDataResponse landscapeDataResponse = port.getLandscapeData(dataRequest);
+		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeEntryValue> values = landscapeDataResponse.getResult().stream().collect(Collectors.toMap(EmdsEpiDeclServerLandscapeDataLandscapeEntryValue::getName,Function.identity()));
+		
+		Iterator<String> keys = landscapeEntryValues.getKeys();
+		while (keys.hasNext()) {
+			String key = keys.next();
+			values.get(key).setValue(landscapeEntryValues.getString(key));
+		}
+		
+		StoreLandscapeDataRequest parameter = new StoreLandscapeDataRequest();
+		parameter.setReference(theInfo.getReference());
+		parameter.setScenarioID(theInfo.getScenario());
+		parameter.getData().addAll(values.values());
+		port.storeLandscapeData(parameter);
+	}
+	
+	private Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> getLandscapeInfo(EmdsEpiDeclBasedataScenarioIdentifier scenario) {
+		GetLandcapeInfoResponse landcapeInfo = port.getLandcapeInfo(new GetLandcapeInfoRequest().withScenario(scenario));
+		return landcapeInfo.getResult().stream().collect(Collectors.toMap(EmdsEpiDeclServerLandscapeDataLandscapeInfo::getEntryName,Function.identity()));
+	}
+	
+	
+	public LandscapeAdminHelper withLog(Consumer<Object> log) {
+		this.log = log;
+		return this;
+	}
 	
 }

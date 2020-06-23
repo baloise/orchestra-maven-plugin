@@ -68,8 +68,8 @@ public class DeployHelper {
 		log = System.out::println;
 	}
 
-	public void deploy(File psc) throws IOException {
-		deploy(psc, false);
+	public String deploy(File psc) throws IOException {
+		return deploy(psc, false);
 	}
 	
 
@@ -86,8 +86,12 @@ public class DeployHelper {
 		this.log = log;
 		return this;
 	}
+	
+	public Consumer<Object> getLog() {
+		return log;
+	}
 
-	public void deploy(File psc, boolean autostart) throws IOException {
+	public String deploy(File psc, boolean autostart) throws IOException {
 		AquireDeploymentTokenResponse deploymentToken = port.aquireDeploymentToken(new AquireDeploymentTokenRequest());
 		token = deploymentToken.getResult();
 		String uuid = PSCHelper.getScenarioId(psc);
@@ -106,6 +110,7 @@ public class DeployHelper {
 		} finally {
 			port.freeDeploymentToken(new FreeDeploymentTokenRequest().withToken(token));
 		}
+		return uuid;
 	}
 
 
