@@ -94,7 +94,7 @@ public class DeployHelper {
 	public String deploy(File psc, boolean autostart) throws IOException {
 		AquireDeploymentTokenResponse deploymentToken = port.aquireDeploymentToken(new AquireDeploymentTokenRequest());
 		token = deploymentToken.getResult();
-		String uuid = PSCHelper.getScenarioId(psc);
+		String uuid = new PSCHelper().getScenarioId(psc);
 		try {
 			boolean wasRunning = false;
 			if (isDeployed(uuid)) {

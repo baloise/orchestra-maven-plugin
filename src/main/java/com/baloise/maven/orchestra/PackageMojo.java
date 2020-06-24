@@ -27,6 +27,12 @@ public class PackageMojo extends AbstractMojo {
 	
 	@Parameter(property = "pscFile", required = false)
 	private File pscFile;
+	
+	@Parameter(property = "sourceFolder", required = false)
+	private File sourceFolder;
+		
+	@Parameter(property = "exclude", required = false)
+	private String exclude;
 
 	@Parameter(defaultValue = "${project.artifactId}", property = "artifactId", required = true)
 	private String artifactId;
@@ -35,20 +41,21 @@ public class PackageMojo extends AbstractMojo {
 	private String version;
 
 	public void execute() throws MojoExecutionException {
-		outputDirectory  = ajustOutputDir(outputDirectory, getLog());
+		if(pscFile == null) outputDirectory  = ajustOutputDir(outputDirectory, getLog());
 		try {
 			File orchestraSrc = detectSourceFolder();
 			if (!orchestraSrc.isDirectory())
 				throw new IOException(orchestraSrc.getAbsolutePath() + " is not a directory");
 			File pscFileLocation = getPscFileLocation(outputDirectory, artifactId, version, pscFile);
 			getLog().info(format("packaging %s to %s", orchestraSrc, pscFileLocation));
-			PSCHelper.createPscFile(orchestraSrc, pscFileLocation, artifactId);
+			new PSCHelper().withLog(o -> getLog().info(String.valueOf(o))).createPscFile(orchestraSrc, pscFileLocation, artifactId, exclude);
 		} catch (IOException e) {
 			throw new MojoExecutionException(e.getMessage(), e);
 		}
 	}
 
 	public File detectSourceFolder() throws IOException {
+		if(sourceFolder != null) return sourceFolder;
 		File defaultSource = new File("src/main/orchestra");
 		if(hasPom()) {
 			File ret = new File(defaultSource, artifactId);
@@ -65,5 +72,5 @@ public class PackageMojo extends AbstractMojo {
 					.map(Path::getParent)
 					.orElseThrow(IOException::new)
 					.toFile();
-	}
+	}	
 }

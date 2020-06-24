@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.function.Consumer;
 import java.util.zip.Adler32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.ZipEntry;
@@ -16,19 +17,23 @@ import java.util.zip.ZipOutputStream;
 public class PSCHelper {
 
 	private static final String DEPLOYMENT_INFO = "__deploymentinfo__";
+	public static final String DEFAULT_EXCLUDE = "DEFAULT";
+	private Consumer<Object> log = System.out::println;
 
-	private static void zipDirectory(File dir, ZipOutputStream zOut) throws IOException {
-		zipDirectory("", dir, zOut);
+	private void zipDirectory(File dir, ZipOutputStream zOut, String exclude) throws IOException {
+		zipDirectory("", dir, zOut, exclude);
 	}
 
-	private static void zipDirectory(String basePath, File dir, ZipOutputStream zOut) throws IOException {
+	private void zipDirectory(String basePath, File dir, ZipOutputStream zOut, String exclude) throws IOException {
 		byte[] buffer = new byte[4096];
 		File[] files = dir.listFiles();
 		for (File file : files) {
-			if (file.isDirectory()) {
+			if (isExcluded(file, exclude)) {
+				log.accept("excluded " + file.getPath());
+			}else if (file.isDirectory()) {
 				String path = basePath + file.getName() + "/";
 				zOut.putNextEntry(new ZipEntry(path));
-				zipDirectory(path, file, zOut);
+				zipDirectory(path, file, zOut, exclude);
 				zOut.closeEntry();
 			} else {
 				FileInputStream fin = new FileInputStream(file);
@@ -43,10 +48,18 @@ public class PSCHelper {
 		}
 	}
 
-	public static String getScenarioId(File psc) throws IOException {
+	private boolean isExcluded(File file, String exclude) {
+		if(exclude.equals(DEFAULT_EXCLUDE)) {
+			return file.isDirectory() || file.getName().startsWith(".") || file.getName().equalsIgnoreCase("pom.xml");
+		}
+		return false;
+	}
+
+	public String getScenarioId(File psc) throws IOException {
 		return getScenarioProperties(psc).getProperty("UUID");
 	}
-	public static Properties getScenarioProperties(File psc) throws IOException {
+	
+	public Properties getScenarioProperties(File psc) throws IOException {
 		try (ZipFile zipFile = new ZipFile(psc)) {
 			ZipEntry entry = zipFile.getEntry("props");
 			try (InputStream in = zipFile.getInputStream(entry)) {
@@ -57,7 +70,7 @@ public class PSCHelper {
 		}
 	}
 	
-	public static void createPscFile(File sourceFolder, File targetFile, String scenarioName) throws IOException {
+	public void createPscFile(File sourceFolder, File targetFile, String scenarioName, String exclude) throws IOException {
 		FileOutputStream fOut = new FileOutputStream(targetFile);
 		CheckedOutputStream checksum = new CheckedOutputStream(fOut, new Adler32());
 		ZipOutputStream zOut = new ZipOutputStream(checksum);
@@ -68,12 +81,17 @@ public class PSCHelper {
 		DataOutputStream dOut = new DataOutputStream(zOut);
 		dOut.writeUTF(scenarioName);
 
-		zipDirectory(sourceFolder, zOut);
+		zipDirectory(sourceFolder, zOut, exclude);
 
 		dOut.flush();
 		zOut.closeEntry();
 		zOut.finish();
 		zOut.close();
+	}
+
+	public PSCHelper withLog(Consumer<Object> log) {
+		this.log = log;
+		return this;
 	}
 
 }
