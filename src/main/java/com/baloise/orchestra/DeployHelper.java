@@ -40,6 +40,7 @@ public class DeployHelper {
 	private int retryCount = 30;
 	private long retryDeplayMillies = 1000;
 	private Consumer<Object> log;
+	private String comment;
 	
 	
 	@FunctionalInterface
@@ -138,7 +139,7 @@ public class DeployHelper {
 				new DeployScenarioCallbackRequest()
 					.withToken(token)
 					.withSerializedScenario(Files.readAllBytes(psc.toPath()))
-					.withComment(format("deployed %s", new Date()))
+					.withComment(comment !=null? comment : format("deployed %s", new Date()))
 				);
 		waitForRedeploy("Deployment");
 	}
@@ -148,7 +149,7 @@ public class DeployHelper {
 				new ReDeployScenarioCallbackRequest()
 				.withToken(token)
 				.withSerializedScenario(Files.readAllBytes(psc.toPath()))
-				.withComment(format("redeployed %s", new Date()))
+				.withComment(comment !=null? comment : format("redeployed %s", new Date()))
 				);
 		waitForRedeploy("Redeployment");
 	}
@@ -206,6 +207,11 @@ public class DeployHelper {
 
 	boolean isDeployed(String uuid) {
 		return getScenarioInfo(uuid).getResult() != null;
+	}
+	
+	public DeployHelper withComment(String comment) {
+		this.comment = comment;
+		return this;
 	}
 
 }

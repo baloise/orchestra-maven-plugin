@@ -37,6 +37,9 @@ public class DeployMojo extends AbstractMojo {
 
 	@Parameter(property = "user", required = true)
 	private String user;
+	
+	@Parameter(property = "comment", required = false)
+	private String comment;
 
 	@Parameter(property = "password", required = true)
 	private String password;
@@ -46,7 +49,9 @@ public class DeployMojo extends AbstractMojo {
 	
 	public void execute() throws MojoExecutionException {
 		try {
-			DeployHelper deployHelper = new DeployHelper(user, password, new URI(server)).withLog(o -> getLog().info(String.valueOf(o)));
+			DeployHelper deployHelper = new DeployHelper(user, password, new URI(server))
+					.withComment(comment)
+					.withLog(o -> getLog().info(String.valueOf(o)));
 			File pscFileLocation = getPscFileLocation(outputDirectory, artifactId, version, pscFile);
 			getLog().info(format("deploying %s to %s", pscFileLocation, server));
 			String scenarioId = deployHelper.deploy(pscFileLocation);
