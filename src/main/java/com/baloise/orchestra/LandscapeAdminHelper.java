@@ -85,7 +85,12 @@ public class LandscapeAdminHelper {
 		Iterator<String> keys = landscapeEntryValues.getKeys();
 		while (keys.hasNext()) {
 			String key = keys.next();
-			values.get(key).setValue(landscapeEntryValues.getString(key));
+			EmdsEpiDeclServerLandscapeDataLandscapeEntryValue value = values.get(key);
+			if(value!= null) {
+				value.setValue(landscapeEntryValues.getString(key));
+			} else {
+				log.accept(format("WARNING - key not found : '%s'", key));
+			}
 		}
 		
 		StoreLandscapeDataRequest parameter = new StoreLandscapeDataRequest();
