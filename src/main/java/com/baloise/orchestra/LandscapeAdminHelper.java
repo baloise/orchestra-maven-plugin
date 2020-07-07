@@ -1,18 +1,34 @@
 package com.baloise.orchestra;
 
 import static java.lang.String.format;
+import static java.util.Collections.singletonMap;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.xml.ws.BindingProvider;
 
 import org.apache.commons.configuration2.INIConfiguration;
 import org.apache.commons.configuration2.SubnodeConfiguration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+
+import com.baloise.common.FactoryHashMap;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import emds.epi.decl.server.landscape.landscapeadministration.EmdsEpiDeclBasedataScenarioIdentifier;
 import emds.epi.decl.server.landscape.landscapeadministration.EmdsEpiDeclServerLandscapeDataLandscapeEntryValue;
@@ -57,17 +73,61 @@ public class LandscapeAdminHelper {
 		log = System.out::println;
 	}
 	
-	public void deploy(String scenarioId, INIConfiguration ini) {
+	private Map<String, Map<String, String>> map(INIConfiguration ini) {
+		FactoryHashMap<String, Map<String, String>> ret = FactoryHashMap.create(()-> new HashMap<String, String>());
+		for(String landscapeEntryName : ini.getSections()) {
+			SubnodeConfiguration landscapeEntryValues = ini.getSection(landscapeEntryName);
+			Iterator<String> keys = landscapeEntryValues.getKeys();
+			while (keys.hasNext()) {
+				String key = keys.next().toLowerCase();
+				Map<String, String> values = ret.get(key);
+				if(values.put(key, landscapeEntryValues.getString(key)) != null) {
+					log.accept("WARNING - overwriting " +key);
+				}
+			}
+		}
+		return ret;
+	}
+	
+	private Map<String, Map<String, String>> mapJson(String filePath, String jsonPath) throws IOException {
+		FactoryHashMap<String, Map<String, String>> ret = FactoryHashMap.create(()-> new HashMap<String, String>());
+		
+		ObjectMapper mapper = new ObjectMapper();
+		Map<String, Object> results = mapper.readValue(new File(filePath), new TypeReference<Map<String, Object>>() { } );
+		
+		if(jsonPath !=null) {
+			for (String pathElement : jsonPath.split("/")) {
+				results = (Map<String, Object>) results.get(pathElement);
+			}
+		}
+		
+		results.forEach((section,props) -> {
+			Map<String, String> values = ret.get(section);
+			Map<String, Object> vm = Map.class.isAssignableFrom(props.getClass()) ? (Map) props : singletonMap("VALUE", props);
+			vm.forEach((key,value) -> {
+				key = key.toLowerCase();
+				String stringValue =
+						Array.class.isAssignableFrom(value.getClass()) ?
+						Arrays.stream((Object[]) value).map(Objects::toString).collect(Collectors.joining(", ")) :
+						value.toString();	
+				if(values.put(key, stringValue) != null) {
+					log.accept("WARNING - overwriting " +key);
+				}
+			});
+		});
+		
+		return ret;
+	}
+	
+	public void deploy(String scenarioId, Map<String, Map<String, String>> params) {
 		EmdsEpiDeclBasedataScenarioIdentifier scenario = new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(scenarioId);
 		
 		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info = getLandscapeInfo(scenario);
-		
-		for( String landscapeEntryName :ini.getSections()) {
+		params.forEach((landscapeEntryName , landscapeEntryValues)-> {
 			log.accept("configuring " + landscapeEntryName);
-			storeLandscapeData(scenario, info, landscapeEntryName, ini.getSection(landscapeEntryName));
-		}
+			storeLandscapeData(scenario, info, landscapeEntryName, landscapeEntryValues);
+		});
 	}
-	
 	
 	public Consumer<Object> getLog() {
 		return log;
@@ -75,23 +135,22 @@ public class LandscapeAdminHelper {
 	
 	private void storeLandscapeData(EmdsEpiDeclBasedataScenarioIdentifier scenario,
 			Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info, String landscapeEntryName,
-			SubnodeConfiguration landscapeEntryValues) {
+			 Map<String, String> landscapeEntryValues) {
 		
 		EmdsEpiDeclServerLandscapeDataLandscapeInfo theInfo = info.get(landscapeEntryName);
 		GetLandscapeDataRequest dataRequest = new GetLandscapeDataRequest().withScenarioID(scenario).withReference(theInfo.getReference());
 		GetLandscapeDataResponse landscapeDataResponse = port.getLandscapeData(dataRequest);
-		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeEntryValue> values = landscapeDataResponse.getResult().stream().collect(Collectors.toMap(EmdsEpiDeclServerLandscapeDataLandscapeEntryValue::getName,Function.identity()));
 		
-		Iterator<String> keys = landscapeEntryValues.getKeys();
-		while (keys.hasNext()) {
-			String key = keys.next();
+		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeEntryValue> values = landscapeDataResponse.getResult().stream().collect(toMap((e)->{return e.getName().toLowerCase();},identity()));
+
+		landscapeEntryValues.forEach((key,newValue)->{
 			EmdsEpiDeclServerLandscapeDataLandscapeEntryValue value = values.get(key);
 			if(value!= null) {
-				value.setValue(landscapeEntryValues.getString(key));
+				value.setValue(newValue);
 			} else {
 				log.accept(format("WARNING - key not found : '%s'", key));
 			}
-		}
+		});
 		
 		StoreLandscapeDataRequest parameter = new StoreLandscapeDataRequest();
 		parameter.setReference(theInfo.getReference());
@@ -109,6 +168,19 @@ public class LandscapeAdminHelper {
 	public LandscapeAdminHelper withLog(Consumer<Object> log) {
 		this.log = log;
 		return this;
+	}
+	
+	public void deploy(String scenarioId, String landscapeURI) throws IOException {
+		String[] tokens = landscapeURI.split(Pattern.quote(File.pathSeparator),2);
+		if(tokens[0].endsWith("json")) {
+			deploy(scenarioId, mapJson(tokens[0], tokens.length == 2 ? tokens[1] : null));
+		} else {
+			try {
+				deploy(scenarioId, map(new Configurations().ini(tokens[0])));
+			} catch (ConfigurationException e) {
+				throw new IOException("Could not deploy landscape " + landscapeURI, e);
+			}
+		}
 	}
 	
 }

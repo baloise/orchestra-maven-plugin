@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+	<skin>
+		<groupId>org.apache.maven.skins</groupId>
+		<artifactId>maven-fluido-skin</artifactId>
+		<version>1.9</version>
+	</skin>
+	<custom>
+		<fluidoSkin>
+			<topBarEnabled>true</topBarEnabled>
+			<sideBarEnabled>true</sideBarEnabled>
+			<topBarIcon>
+				<name>Orchestra Maven Plugin</name>
+				<alt>Orchestra Maven Plugin</alt>
+				<src>/images/baloise-logo.png</src>
+				<href>/index.html</href>
+			</topBarIcon>
+			<copyrightClass>pull-right</copyrightClass>
+			<gitHub>
+				<projectId>baloise/orchestra-maven-plugin</projectId>
+				<ribbonOrientation>right</ribbonOrientation>
+				<ribbonColor>orange</ribbonColor>
+			</gitHub>
+		</fluidoSkin>
+	</custom>
+	  <poweredBy>
+    <logo name="Baloise" href="https://github.com/baloise/open-source/"
+          img="https://dwglogo.com/wp-content/uploads/2017/10/1200px-Baloise_logo.png"/>
+  </poweredBy>
+	<body>
+		<menu name="Welcome">
+			<item name="Introduction" href="index.html" />
+			<item name="Get in touch" href="contact.html" />
+		</menu>
+		<menu name="Goals">
+			<item name="Overview" href="plugin-info.html" />
+			<item name="scenario-package" href="scenario-package-mojo.html" />
+			<item name="scenario-deploy" href="scenario-deploy-mojo.html" />
+		</menu>
+	</body>
+</project>

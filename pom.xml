@@ -8,13 +8,17 @@
 
 	<groupId>com.baloise.maven</groupId>
 	<artifactId>orchestra-maven-plugin</artifactId>
-	<version>0.4.0</version>
+	<version>0.4.1</version>
 	<packaging>maven-plugin</packaging>
 
-	<name>orchestra-maven-plugin Maven Plugin</name>
-
+	<name>orchestra-maven-plugin</name>
+	<issueManagement>
+		<system>Github</system>
+		<url>https://github.com/baloise/orchestra-maven-plugin/issues</url>
+	</issueManagement>
+	<inceptionYear>2019</inceptionYear>
 	<description>A maven plugin to manage soffico orchestra.</description>
-	<url>https://github.com/baloise/orchestra-maven-plugin</url>
+	<url>https://baloise.github.io/orchestra-maven-plugin/</url>
 
 	<licenses>
 		<license>
@@ -22,6 +26,7 @@
 			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
 		</license>
 	</licenses>
+
 	<developers>
 		<developer>
 			<name>Matthias Cullmann</name>
@@ -30,6 +35,7 @@
 			<organizationUrl>http://www.baloise.com</organizationUrl>
 		</developer>
 	</developers>
+
 	<scm>
 		<connection>scm:git:https://github.com/baloise/orchestra-maven-plugin.git</connection>
 		<developerConnection>scm:git:https://github.com/baloise/orchestra-maven-plugin.git</developerConnection>
@@ -56,11 +62,25 @@
 		<cxf.version>3.3.5</cxf.version>
 	</properties>
 
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-plugin-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</reporting>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-configuration2</artifactId>
 			<version>2.7</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.11.1</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-beanutils</groupId>
@@ -215,7 +235,17 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<version>3.9.1</version>
+			</plugin>
 
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>3.1.0</version>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-codegen-plugin</artifactId>
@@ -371,5 +401,40 @@
 				</plugins>
 			</build>
 		</profile>
+		<!-- 
+		<profile>
+			<id>travis</id>
+			<activation>
+				<property>
+					<name>env.TRAVIS</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>com.github.github</groupId>
+						<artifactId>site-maven-plugin</artifactId>
+						<version>0.12</version>
+						<configuration>
+							<merge>false</merge>
+							<repositoryOwner>baloise</repositoryOwner>
+							<repositoryName>${project.artifactId}</repositoryName>
+							<message>Releasing ${project.version}</message>
+							<oauth2Token>${env.github_oauth2Token}</oauth2Token>
+						</configuration>
+						<executions>
+							<execution>
+								<goals>
+									<goal>site</goal>
+								</goals>
+								<phase>package</phase>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		 -->
 	</profiles>
 </project>

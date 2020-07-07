@@ -1,11 +1,14 @@
 package com.baloise.orchestra;
 
+import static java.lang.String.format;
+
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.zip.Adler32;
@@ -49,6 +52,7 @@ public class PSCHelper {
 	}
 
 	private boolean isExcluded(File file, String exclude) {
+		if(exclude == null) return false;
 		if(exclude.equals(DEFAULT_EXCLUDE)) {
 			return file.isDirectory() || file.getName().startsWith(".") || file.getName().equalsIgnoreCase("pom.xml");
 		}
@@ -70,7 +74,12 @@ public class PSCHelper {
 		}
 	}
 	
+	
+	
 	public void createPscFile(File sourceFolder, File targetFile, String scenarioName, String exclude) throws IOException {
+		if(toAbsoluteNormalPath(targetFile).startsWith(toAbsoluteNormalPath(sourceFolder))) {
+			throw new IllegalArgumentException(format("Endless loop detected : target file %s must not be under source folder %s", targetFile, sourceFolder));
+		}
 		FileOutputStream fOut = new FileOutputStream(targetFile);
 		CheckedOutputStream checksum = new CheckedOutputStream(fOut, new Adler32());
 		ZipOutputStream zOut = new ZipOutputStream(checksum);
@@ -87,6 +96,10 @@ public class PSCHelper {
 		zOut.closeEntry();
 		zOut.finish();
 		zOut.close();
+	}
+
+	private Path toAbsoluteNormalPath(File targetFile) {
+		return targetFile.getAbsoluteFile().toPath().normalize();
 	}
 
 	public PSCHelper withLog(Consumer<Object> log) {
