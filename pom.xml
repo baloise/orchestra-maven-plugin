@@ -20,6 +20,11 @@
 	<description>A maven plugin to manage soffico orchestra.</description>
 	<url>https://baloise.github.io/orchestra-maven-plugin/</url>
 
+	<ciManagement>
+		<system>Github Actions</system>
+		<url>https://github.com/baloise/repository-template-java/actions</url>
+	</ciManagement>
+
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -44,9 +49,9 @@
 
 	<distributionManagement>
 		<repository>
-			<id>bintray-baopso-mvn</id>
-			<name>baopso-mvn</name>
-			<url>https://api.bintray.com/maven/baopso/mvn/orchestra-maven-plugin/;publish=1</url>
+			<id>github</id>
+			<name>GitHub Baloise Apache Maven Packages</name>
+			<url>https://maven.pkg.github.com/baloise/</url>
 		</repository>
 	</distributionManagement>
 
@@ -401,40 +406,5 @@
 				</plugins>
 			</build>
 		</profile>
-		<!-- 
-		<profile>
-			<id>travis</id>
-			<activation>
-				<property>
-					<name>env.TRAVIS</name>
-					<value>true</value>
-				</property>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>com.github.github</groupId>
-						<artifactId>site-maven-plugin</artifactId>
-						<version>0.12</version>
-						<configuration>
-							<merge>false</merge>
-							<repositoryOwner>baloise</repositoryOwner>
-							<repositoryName>${project.artifactId}</repositoryName>
-							<message>Releasing ${project.version}</message>
-							<oauth2Token>${env.github_oauth2Token}</oauth2Token>
-						</configuration>
-						<executions>
-							<execution>
-								<goals>
-									<goal>site</goal>
-								</goals>
-								<phase>package</phase>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		 -->
 	</profiles>
 </project>
