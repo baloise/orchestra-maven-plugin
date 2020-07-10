@@ -1,12 +1,13 @@
 name: CI
 
-on: [push]
+on: 
+  push:
+    tags-ignore:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10, verflixt
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@master # don't get confused by @master - it is the version of the checkout action. You repo will be checked out with ${{ github.ref }}
