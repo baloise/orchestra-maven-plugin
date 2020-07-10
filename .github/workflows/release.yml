@@ -16,7 +16,8 @@ jobs:
         env:
             GITHUB_USERNAME: x-access-token
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mvn --no-transfer-progress --settings .github/maven-settings.xml clean package site deploy
+            BINTRAY_BAOPSO_API_KEY : ${{ secrets.BINTRAY_BAOPSO_API_KEY }}
+        run: mvn --no-transfer-progress --settings .github/maven-settings.xml clean site deploy
       - name: Deploy site
         uses: JamesIves/github-pages-deploy-action@master
         with:
