@@ -16,7 +16,7 @@ jobs:
         env:
             GITHUB_USERNAME: x-access-token
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mvn -e -X --settings .github/maven-settings.xml site deploy
+        run: mvn --no-transfer-progress --settings .github/maven-settings.xml clean package site deploy
       - name: Deploy site
         uses: JamesIves/github-pages-deploy-action@master
         with:
