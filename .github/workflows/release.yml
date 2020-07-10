@@ -19,7 +19,7 @@ jobs:
             BINTRAY_BAOPSO_API_KEY : ${{ secrets.BINTRAY_BAOPSO_API_KEY }}
         run: mvn --no-transfer-progress --settings .github/maven-settings.xml clean site deploy
       - name: Deploy site
-        uses: JamesIves/github-pages-deploy-action@master
+        uses: JamesIves/github-pages-deploy-action@3.5.7
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: gh-pages 
