@@ -138,6 +138,10 @@ public class LandscapeAdminHelper {
 			 Map<String, String> landscapeEntryValues) {
 		
 		EmdsEpiDeclServerLandscapeDataLandscapeInfo theInfo = info.get(landscapeEntryName);
+		if(theInfo == null) {
+			log.accept(format("WARNING - landscape not found : '%s'", landscapeEntryName));
+			return;
+		}
 		GetLandscapeDataRequest dataRequest = new GetLandscapeDataRequest().withScenarioID(scenario).withReference(theInfo.getReference());
 		GetLandscapeDataResponse landscapeDataResponse = port.getLandscapeData(dataRequest);
 		
