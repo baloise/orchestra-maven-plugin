@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Properties;
-import java.util.function.Consumer;
 import java.util.zip.Adler32;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.ZipEntry;
@@ -21,7 +20,7 @@ public class PSCHelper {
 
 	private static final String DEPLOYMENT_INFO = "__deploymentinfo__";
 	public static final String DEFAULT_EXCLUDE = "DEFAULT";
-	private Consumer<Object> log = System.out::println;
+	private Log log = Log.DEFAULT;
 
 	private void zipDirectory(File dir, ZipOutputStream zOut, String exclude) throws IOException {
 		zipDirectory("", dir, zOut, exclude);
@@ -32,7 +31,7 @@ public class PSCHelper {
 		File[] files = dir.listFiles();
 		for (File file : files) {
 			if (isExcluded(file, exclude)) {
-				log.accept("excluded " + file.getPath());
+				log.info("excluded " + file.getPath());
 			}else if (file.isDirectory()) {
 				String path = basePath + file.getName() + "/";
 				zOut.putNextEntry(new ZipEntry(path));
@@ -102,7 +101,7 @@ public class PSCHelper {
 		return targetFile.getAbsoluteFile().toPath().normalize();
 	}
 
-	public PSCHelper withLog(Consumer<Object> log) {
+	public PSCHelper withLog(Log log) {
 		this.log = log;
 		return this;
 	}

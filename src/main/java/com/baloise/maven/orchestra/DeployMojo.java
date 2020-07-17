@@ -109,7 +109,7 @@ public class DeployMojo extends AbstractMojo {
 		try {
 			DeployHelper deployHelper = new DeployHelper(user, password, new URI(server))
 					.withComment(comment)
-					.withLog(o -> getLog().info(String.valueOf(o)));
+					.withLog(new ApacheLogWrapper(getLog()));
 			File pscFileLocation = getPscFileLocation(outputDirectory, artifactId, version, pscFile);
 			getLog().info(format("deploying %s to %s", pscFileLocation, server));
 			String scenarioId = deployHelper.deploy(pscFileLocation);

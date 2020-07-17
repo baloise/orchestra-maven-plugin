@@ -12,7 +12,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import javax.xml.ws.BindingProvider;
 
@@ -39,7 +38,7 @@ public class DeployHelper {
 	private EmdsEpiDeclServerDeploymentDataDeploymentToken token;
 	private int retryCount = 30;
 	private long retryDeplayMillies = 1000;
-	private Consumer<Object> log;
+	private Log log;
 	private String comment;
 	
 	
@@ -66,7 +65,7 @@ public class DeployHelper {
 		BindingProvider prov = (BindingProvider) port;
 		prov.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, user);
 		prov.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, password);
-		log = System.out::println;
+		log = Log.DEFAULT;
 	}
 
 	public String deploy(File psc) throws IOException {
@@ -83,12 +82,12 @@ public class DeployHelper {
 		this.retryDeplayMillies = retryDeplayMillies;
 		return this;
 	}
-	public DeployHelper withLog(Consumer<Object> log) {
+	public DeployHelper withLog(Log log) {
 		this.log = log;
 		return this;
 	}
 	
-	public Consumer<Object> getLog() {
+	public Log getLog() {
 		return log;
 	}
 
@@ -181,14 +180,14 @@ public class DeployHelper {
 		        if(failure.isPresent()) {
 		        	throw new IOException(failure.get());	        	
 		        }
-		        log.accept(format("waiting for deployment to finish : %s attempts left ", retry));
+		        log.info(format("waiting for deployment to finish : %s attempts left ", retry));
 	        	retry--;
 	        	sleep();
 			}
 	        throw new IOException(format("no success message from orchestra after %s attempts", retryCount));
         } finally {
         	if(res != null) {
-        		log.accept("DATE                -                   ORIGINATOR (CATEGORY) : DESCRIPTION ");
+        		log.info("DATE                -                   ORIGINATOR (CATEGORY) : DESCRIPTION ");
         		res.stream()
         				.sorted(comparing(EmdsEpiDeclServerDeploymentDataDeploymentInfo::getDate))
         				.map(this::formatInfo)
