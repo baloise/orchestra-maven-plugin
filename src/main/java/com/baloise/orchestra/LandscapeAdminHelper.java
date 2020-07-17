@@ -6,6 +6,7 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URI;
@@ -14,7 +15,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -28,6 +28,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 
 import com.baloise.common.FactoryHashMap;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import emds.epi.decl.server.landscape.landscapeadministration.EmdsEpiDeclBasedataScenarioIdentifier;
@@ -44,7 +45,7 @@ import emds.epi.decl.server.landscape.landscapeadministration.StoreLandscapeData
 public class LandscapeAdminHelper {
 
 	private LandscapeAdministrationPort port;
-	private Consumer<Object> log;
+	private Log log;
 	
 	
 	@FunctionalInterface
@@ -70,7 +71,7 @@ public class LandscapeAdminHelper {
 		BindingProvider prov = (BindingProvider) port;
 		prov.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, user);
 		prov.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, password);
-		log = System.out::println;
+		log = Log.DEFAULT;
 	}
 	
 	private Map<String, Map<String, String>> map(INIConfiguration ini) {
@@ -82,7 +83,7 @@ public class LandscapeAdminHelper {
 				String key = keys.next().toLowerCase();
 				Map<String, String> values = ret.get(key);
 				if(values.put(key, landscapeEntryValues.getString(key)) != null) {
-					log.accept("WARNING - overwriting " +key);
+					log.warn("overwriting " +key);
 				}
 			}
 		}
@@ -93,11 +94,28 @@ public class LandscapeAdminHelper {
 		FactoryHashMap<String, Map<String, String>> ret = FactoryHashMap.create(()-> new HashMap<String, String>());
 		
 		ObjectMapper mapper = new ObjectMapper();
-		Map<String, Object> results = mapper.readValue(new File(filePath), new TypeReference<Map<String, Object>>() { } );
+		mapper.enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
+		mapper.enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
+		
+		File jsonFile = new File(filePath);
+		checkFileExists(filePath, jsonFile);
+		Map<String, Object> results = null;
+		
+		try {
+			results = mapper.readValue(jsonFile, new TypeReference<Map<String, Object>>() { } );
+		} catch (Exception e) {
+			log.error(e.getMessage() + " while parsing " + filePath);
+			throw e;
+		}
 		
 		if(jsonPath !=null) {
 			for (String pathElement : jsonPath.split("/")) {
 				results = (Map<String, Object>) results.get(pathElement);
+				if(results == null) {
+					String message = format("JSON path element '%s' not found in %s", pathElement, filePath);
+					log.error(message);
+					throw new IOException(message);
+				}
 			}
 		}
 		
@@ -111,7 +129,7 @@ public class LandscapeAdminHelper {
 						Arrays.stream((Object[]) value).map(Objects::toString).collect(Collectors.joining(", ")) :
 						value.toString();	
 				if(values.put(key, stringValue) != null) {
-					log.accept("WARNING - overwriting " +key);
+					log.warn("overwriting " +key);
 				}
 			});
 		});
@@ -119,17 +137,25 @@ public class LandscapeAdminHelper {
 		return ret;
 	}
 	
+	private void checkFileExists(String filePath, File jsonFile) throws FileNotFoundException {
+		if(!jsonFile.exists()) {
+			String message = filePath + " not found";
+			log.error(message);
+			throw new FileNotFoundException(message);
+		}
+	}
+	
 	public void deploy(String scenarioId, Map<String, Map<String, String>> params) {
 		EmdsEpiDeclBasedataScenarioIdentifier scenario = new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(scenarioId);
 		
 		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info = getLandscapeInfo(scenario);
 		params.forEach((landscapeEntryName , landscapeEntryValues)-> {
-			log.accept("configuring " + landscapeEntryName);
+			log.info("configuring " + landscapeEntryName);
 			storeLandscapeData(scenario, info, landscapeEntryName, landscapeEntryValues);
 		});
 	}
 	
-	public Consumer<Object> getLog() {
+	public Log getLog() {
 		return log;
 	}
 	
@@ -152,7 +178,7 @@ public class LandscapeAdminHelper {
 			if(value!= null) {
 				value.setValue(newValue);
 			} else {
-				log.accept(format("WARNING - key not found : '%s'", key));
+				log.info(format("WARNING - key not found : '%s'", key));
 			}
 		});
 		
@@ -169,7 +195,7 @@ public class LandscapeAdminHelper {
 	}
 	
 	
-	public LandscapeAdminHelper withLog(Consumer<Object> log) {
+	public LandscapeAdminHelper withLog(Log log) {
 		this.log = log;
 		return this;
 	}

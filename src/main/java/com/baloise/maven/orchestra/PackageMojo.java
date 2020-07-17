@@ -94,7 +94,7 @@ public class PackageMojo extends AbstractMojo {
 				throw new IOException(orchestraSrc.getAbsolutePath() + " is not a directory");
 			File pscFileLocation = getPscFileLocation(outputDirectory, artifactId, version, pscFile);
 			getLog().info(format("packaging %s to %s", orchestraSrc, pscFileLocation));
-			new PSCHelper().withLog(o -> getLog().info(String.valueOf(o))).createPscFile(orchestraSrc, pscFileLocation, artifactId, exclude);
+			new PSCHelper().withLog(new ApacheLogWrapper(getLog())).createPscFile(orchestraSrc, pscFileLocation, artifactId, exclude);
 		} catch (IOException e) {
 			throw new MojoExecutionException(e.getMessage(), e);
 		}
