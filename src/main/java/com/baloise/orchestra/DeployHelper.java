@@ -1,5 +1,7 @@
 package com.baloise.orchestra;
 
+import static com.baloise.orchestra.DeployHelper.DeploymentType.Deployment;
+import static com.baloise.orchestra.DeployHelper.DeploymentType.Redeployment;
 import static java.lang.String.format;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toSet;
@@ -34,6 +36,10 @@ import emds.epi.decl.server.deployment.deploymentservice.ReDeployScenarioCallbac
 
 public class DeployHelper {
 
+	static enum DeploymentType {
+		Deployment, Redeployment
+	}
+	
 	private DeploymentServicePort port;
 	private EmdsEpiDeclServerDeploymentDataDeploymentToken token;
 	private int retryCount = 30;
@@ -140,7 +146,7 @@ public class DeployHelper {
 					.withSerializedScenario(Files.readAllBytes(psc.toPath()))
 					.withComment(comment !=null? comment : format("deployed %s", new Date()))
 				);
-		waitForRedeploy("Deployment");
+		waitFor(Deployment);
 	}
 	
 	private void requestRedeploy(File psc) throws IOException {
@@ -150,7 +156,7 @@ public class DeployHelper {
 				.withSerializedScenario(Files.readAllBytes(psc.toPath()))
 				.withComment(comment !=null? comment : format("redeployed %s", new Date()))
 				);
-		waitForRedeploy("Redeployment");
+		waitFor(Redeployment);
 	}
 	
 	private void sleep() {
@@ -166,7 +172,7 @@ public class DeployHelper {
 		return false;
 	}
 
-	private void waitForRedeploy(String successMessage) throws IOException {
+	private void waitFor(DeploymentType deploymentType) throws IOException {
         int retry = retryCount;
         List<EmdsEpiDeclServerDeploymentDataDeploymentInfo> res = null;
         try {
@@ -174,12 +180,12 @@ public class DeployHelper {
 		        GetDeploymentInfoResponse info = getDeploymentInfo();
 		        res = info.getResult();
 		        Set<String> descs = res.stream().map(EmdsEpiDeclServerDeploymentDataDeploymentInfo::getDescription).collect(toSet());
-		        if(descs.stream().filter(d -> isSuccess(d, successMessage)).findAny().isPresent())
-		        	return;
-		        Optional<String> failure = descs.stream().filter(i->i.startsWith("Redeployment failed") && !i.endsWith(":  null")).findAny();
+		        Optional<String> failure = descs.stream().filter(i->i.startsWith(deploymentType.name()+" failed")).findAny();
 		        if(failure.isPresent()) {
 		        	throw new IOException(failure.get());	        	
 		        }
+		        if(descs.stream().filter(d -> isSuccess(d, deploymentType.name())).findAny().isPresent())
+		        	return;
 		        log.info(format("waiting for deployment to finish : %s attempts left ", retry));
 	        	retry--;
 	        	sleep();
