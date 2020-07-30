@@ -53,7 +53,12 @@ public class PSCHelper {
 	private boolean isExcluded(File file, String exclude) {
 		if(exclude == null) return false;
 		if(exclude.equals(DEFAULT_EXCLUDE)) {
-			return file.isDirectory() || file.getName().startsWith(".") || file.getName().equalsIgnoreCase("pom.xml")|| file.getName().toLowerCase().endsWith(".psc");
+			if(file.isDirectory()) return true;
+			String lname = file.getName().toLowerCase();
+			if(lname.startsWith(".")) return true;
+			if(lname.startsWith("readme")) return true;
+			if(lname.equals("pom.xml")) return true;
+			if(lname.endsWith(".psc")) return true;
 		}
 		return false;
 	}
