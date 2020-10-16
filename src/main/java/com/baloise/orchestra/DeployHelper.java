@@ -180,7 +180,7 @@ public class DeployHelper {
 		        GetDeploymentInfoResponse info = getDeploymentInfo();
 		        res = info.getResult();
 		        Set<String> descs = res.stream().map(EmdsEpiDeclServerDeploymentDataDeploymentInfo::getDescription).collect(toSet());
-		        Optional<String> failure = descs.stream().filter(i->i.startsWith(deploymentType.name()+" failed")).findAny();
+		        Optional<String> failure = descs.stream().filter(i->i.startsWith(deploymentType.name()+" failed") || i.startsWith("Deployment is currently not possible")).findAny();
 		        if(failure.isPresent()) {
 		        	throw new IOException(failure.get());	        	
 		        }
