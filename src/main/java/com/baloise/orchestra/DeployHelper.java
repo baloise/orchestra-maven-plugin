@@ -43,7 +43,7 @@ public class DeployHelper {
 	private DeploymentServicePort port;
 	private EmdsEpiDeclServerDeploymentDataDeploymentToken token;
 	private int retryCount = 30;
-	private long retryDeplayMillies = 1000;
+	private long retryDelayMillies = 1000;
 	private Log log;
 	private String comment;
 	
@@ -84,8 +84,8 @@ public class DeployHelper {
 		return this;
 	}
 
-	public DeployHelper withRetryDeplayMillies(long retryDeplayMillies) {
-		this.retryDeplayMillies = retryDeplayMillies;
+	public DeployHelper withRetryDelayMillies(long retryDelayMillies) {
+		this.retryDelayMillies = retryDelayMillies;
 		return this;
 	}
 	public DeployHelper withLog(Log log) {
@@ -161,7 +161,7 @@ public class DeployHelper {
 	
 	private void sleep() {
 		try {
-			Thread.sleep(retryDeplayMillies);
+			Thread.sleep(retryDelayMillies);
 		} catch (InterruptedException wakeUp) {
 		}
 	}

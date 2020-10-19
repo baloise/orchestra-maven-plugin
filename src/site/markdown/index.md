@@ -57,5 +57,5 @@ You can just reuse the soap client and helper methods in a small library without
 https://dl.bintray.com/baopso/mvn/com/baloise/maven/orchestra-maven-plugin/0.4.1/orchestra-maven-plugin-0.4.1-lib.jar
 
 
-[![CI](https://github.com/baloise/orchestra-maven-plugin/workflows/CI/badge.svg)
-[![Release](https://github.com/baloise/orchestra-maven-plugin/workflows/Release/badge.svg)
+![CI](https://github.com/baloise/orchestra-maven-plugin/workflows/CI/badge.svg)
+![Release](https://github.com/baloise/orchestra-maven-plugin/workflows/Release/badge.svg)
