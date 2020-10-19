@@ -95,6 +95,18 @@ public class DeployMojo extends AbstractMojo {
 	 */
 	@Parameter(property = "password", required = true)
 	private String password;
+	
+	/**
+	 * @since 0.5.2 
+	 */
+	@Parameter(defaultValue = "1000", property = "retryDelayMillies", required = false)
+	private long retryDelayMillies;
+	
+	/**
+	 * @since 0.5.2 
+	 */
+	@Parameter(defaultValue = "30", property = "retryCount", required = false)
+	private int retryCount;
 
 	/**
 	 * Full server URL with protocol and web service port.<br/>
@@ -109,7 +121,9 @@ public class DeployMojo extends AbstractMojo {
 		try {
 			DeployHelper deployHelper = new DeployHelper(user, password, new URI(server))
 					.withComment(comment)
-					.withLog(new ApacheLogWrapper(getLog()));
+					.withLog(new ApacheLogWrapper(getLog()))
+					.withRetryDelayMillies(retryDelayMillies)
+					.withRetryCount(retryCount);
 			File pscFileLocation = getPscFileLocation(outputDirectory, artifactId, version, pscFile);
 			getLog().info(format("deploying %s to %s", pscFileLocation, server));
 			String scenarioId = deployHelper.deploy(pscFileLocation);
