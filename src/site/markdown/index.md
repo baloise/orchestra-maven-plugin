@@ -38,7 +38,7 @@ Add the following to your *~/.m2/settings.xml*
 
 now you can use something like
 
-`> mvn orchestra:deploy -Dscenario=path\to\scenario -Dserver=https://orchestra.mycorp.com:9443`
+`> mvn orchestra:deploy -DpscFile=path\to\scenario -Dserver=https://orchestra.mycorp.com:9443`
 
 [(tell me more)](http://maven.apache.org/guides/introduction/introduction-to-plugin-prefix-mapping.html#Configuring_Maven_to_Search_for_Plugins)
 
@@ -54,8 +54,9 @@ currently the following use cases are supported
 
 You can just reuse the soap client and helper methods in a small library without dependencies on maven, i.e
 
-https://dl.bintray.com/baopso/mvn/com/baloise/maven/orchestra-maven-plugin/0.4.1/orchestra-maven-plugin-0.4.1-lib.jar
+https://dl.bintray.com/baopso/mvn/com/baloise/maven/orchestra-maven-plugin/0.5.2/orchestra-maven-plugin-0.5.2-lib.jar
 
+If you are looking for other files, feel free to have a look at the [bintray maven repository](https://bintray.com/baopso/mvn/orchestra-maven-plugin/) and cherry pick 🍒.
 
 ![CI](https://github.com/baloise/orchestra-maven-plugin/workflows/CI/badge.svg)
 ![Release](https://github.com/baloise/orchestra-maven-plugin/workflows/Release/badge.svg)
