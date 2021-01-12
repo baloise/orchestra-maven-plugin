@@ -28,6 +28,7 @@ import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
 import com.baloise.common.FactoryHashMap;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -146,14 +147,16 @@ public class LandscapeAdminHelper {
 		}
 	}
 	
-	public void deploy(String scenarioId, Map<String, Map<String, String>> params) {
+	public void deploy(String scenarioId, Map<String, Map<String, String>> params) throws IOException {
 		EmdsEpiDeclBasedataScenarioIdentifier scenario = new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(scenarioId);
-		
+
 		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info = getLandscapeInfo(scenario);
 		params.forEach((landscapeEntryName , landscapeEntryValues)-> {
 			log.info("configuring " + landscapeEntryName);
 			storeLandscapeData(scenario, info, landscapeEntryName, landscapeEntryValues);
 		});
+		log.info("landscapes as json from the orchestra server");
+		log.info(getLandscapeAsJson(scenarioId));
 	}
 	
 	public Log getLog() {
@@ -227,10 +230,13 @@ public class LandscapeAdminHelper {
 			GetLandscapeDataResponse data = getLandscapeData(scenario, i);
 			Map<String,String> attributes = new TreeMap<>();
 			data.getResult().stream().forEach((entryValue) -> {
-				attributes.put(entryValue.getName(), entryValue.getEncrypted() ? "secure:'******************************************************************************************'" :entryValue.getValue());
+				attributes.put(entryValue.getName(), entryValue.getEncrypted() ? "*************************************" :entryValue.getValue());
 			});
 			json.put(i.getEntryName(), attributes);
 		});
+		return getPrettyJson(json);
+	}
+	private String getPrettyJson(Map<String, Map<String, String>> json) throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
 	}
