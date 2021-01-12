@@ -227,7 +227,7 @@ public class LandscapeAdminHelper {
 			GetLandscapeDataResponse data = getLandscapeData(scenario, i);
 			Map<String,String> attributes = new TreeMap<>();
 			data.getResult().stream().forEach((entryValue) -> {
-				attributes.put(entryValue.getName(), entryValue.getValue());
+				attributes.put(entryValue.getName(), entryValue.getEncrypted() ? "secure:'******************************************************************************************'" :entryValue.getValue());
 			});
 			json.put(i.getEntryName(), attributes);
 		});
