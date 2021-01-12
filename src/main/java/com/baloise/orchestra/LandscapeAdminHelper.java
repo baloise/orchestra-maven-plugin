@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -168,8 +169,7 @@ public class LandscapeAdminHelper {
 			log.accept(format("WARNING - landscape not found : '%s'", landscapeEntryName));
 			return;
 		}
-		GetLandscapeDataRequest dataRequest = new GetLandscapeDataRequest().withScenarioID(scenario).withReference(theInfo.getReference());
-		GetLandscapeDataResponse landscapeDataResponse = port.getLandscapeData(dataRequest);
+		GetLandscapeDataResponse landscapeDataResponse = getLandscapeData(scenario, theInfo);
 		
 		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeEntryValue> values = landscapeDataResponse.getResult().stream().collect(toMap((e)->{return e.getName().toLowerCase();},identity()));
 
@@ -187,6 +187,12 @@ public class LandscapeAdminHelper {
 		parameter.setScenarioID(theInfo.getScenario());
 		parameter.getData().addAll(values.values());
 		port.storeLandscapeData(parameter);
+	}
+	private GetLandscapeDataResponse getLandscapeData(EmdsEpiDeclBasedataScenarioIdentifier scenario,
+			EmdsEpiDeclServerLandscapeDataLandscapeInfo landscapeInfo) {
+		GetLandscapeDataRequest dataRequest = new GetLandscapeDataRequest().withScenarioID(scenario).withReference(landscapeInfo.getReference());
+		GetLandscapeDataResponse landscapeDataResponse = port.getLandscapeData(dataRequest);
+		return landscapeDataResponse;
 	}
 	
 	private Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> getLandscapeInfo(EmdsEpiDeclBasedataScenarioIdentifier scenario) {
@@ -211,6 +217,22 @@ public class LandscapeAdminHelper {
 				throw new IOException("Could not deploy landscape " + landscapeURI, e);
 			}
 		}
+	}
+	
+	public String getLandscapeAsJson(String scenarioId) throws IOException {
+		EmdsEpiDeclBasedataScenarioIdentifier scenario = new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(scenarioId);
+		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info = getLandscapeInfo(scenario);
+		Map<String, Map<String,String>> json = new TreeMap<>();
+		info.forEach((name,i)->{
+			GetLandscapeDataResponse data = getLandscapeData(scenario, i);
+			Map<String,String> attributes = new TreeMap<>();
+			data.getResult().stream().forEach((entryValue) -> {
+				attributes.put(entryValue.getName(), entryValue.getValue());
+			});
+			json.put(i.getEntryName(), attributes);
+		});
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
 	}
 	
 }
