@@ -84,13 +84,8 @@ public class DeployHelper {
 		return this;
 	}
 
-<<<<<<< HEAD
 	public DeployHelper withRetryDelayMillies(long retryDelayMillies) {
 		this.retryDelayMillies = retryDelayMillies;
-=======
-	public DeployHelper withRetryDeplayMillies(long retryDeplayMillies) {
-		this.retryDelayMillies = retryDeplayMillies;
->>>>>>> branch 'master' of https://github.com/baloise/orchestra-maven-plugin.git
 		return this;
 	}
 	public DeployHelper withLog(Log log) {
