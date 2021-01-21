@@ -48,6 +48,7 @@ public class LandscapeAdminHelper {
 
 	private LandscapeAdministrationPort port;
 	private Log log;
+	private String orchestraHost;
 	
 	
 	@FunctionalInterface
@@ -65,6 +66,7 @@ public class LandscapeAdminHelper {
 
 	public LandscapeAdminHelper(String user, String password, String orchestraHost) {
 		this(user, password, Lambda.run(()->new URI(format("http://%s:8019", orchestraHost))));
+		this.orchestraHost = orchestraHost;
 	}
 	public LandscapeAdminHelper(String user, String password, URI orchestraServer) {
 		LandscapeAdministration dserv = new LandscapeAdministration(Lambda.run(()-> orchestraServer.resolve("/OrchestraRemoteService/LandscapeAdmin/Service?wsdl").toURL())) ;
@@ -156,7 +158,7 @@ public class LandscapeAdminHelper {
 			storeLandscapeData(scenario, info, landscapeEntryName, landscapeEntryValues);
 		});
 		log.info("landscapes as json from the orchestra server");
-		log.info(getLandscapeAsJson(scenarioId));
+		log.info(getLandscapeAsJson(this.orchestraHost, scenarioId, true));
 	}
 	
 	public Log getLog() {
@@ -222,7 +224,7 @@ public class LandscapeAdminHelper {
 		}
 	}
 	
-	public String getLandscapeAsJson(String scenarioId) throws IOException {
+	public String getLandscapeAsJson(String environment, String scenarioId, boolean hideEncryptedValue) throws IOException {
 		EmdsEpiDeclBasedataScenarioIdentifier scenario = new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(scenarioId);
 		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info = getLandscapeInfo(scenario);
 		Map<String, Map<String,String>> json = new TreeMap<>();
@@ -230,13 +232,15 @@ public class LandscapeAdminHelper {
 			GetLandscapeDataResponse data = getLandscapeData(scenario, i);
 			Map<String,String> attributes = new TreeMap<>();
 			data.getResult().stream().forEach((entryValue) -> {
-				attributes.put(entryValue.getName(), entryValue.getEncrypted() ? "*************************************" :entryValue.getValue());
+				attributes.put(entryValue.getName(), hideEncryptedValue && entryValue.getEncrypted() ? "*************************************" :entryValue.getValue());
 			});
 			json.put(i.getEntryName(), attributes);
 		});
-		return getPrettyJson(json);
+		Map<String, Map<String, Map<String, String>>> fullJson = new TreeMap<>();
+		fullJson.put(environment == null ? "" : environment, json);
+		return getPrettyJson(fullJson);
 	}
-	private String getPrettyJson(Map<String, Map<String, String>> json) throws JsonProcessingException {
+	private String getPrettyJson(Object json) throws JsonProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
 	}
