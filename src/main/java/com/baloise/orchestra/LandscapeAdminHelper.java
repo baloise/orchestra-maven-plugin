@@ -157,8 +157,6 @@ public class LandscapeAdminHelper {
 			log.info("configuring " + landscapeEntryName);
 			storeLandscapeData(scenario, info, landscapeEntryName, landscapeEntryValues);
 		});
-		log.info("landscapes as json from the orchestra server");
-		log.info(getLandscapeAsJson(scenarioId, true));
 	}
 	
 	public Log getLog() {
