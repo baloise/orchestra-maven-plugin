@@ -46,6 +46,7 @@ import emds.epi.decl.server.landscape.landscapeadministration.StoreLandscapeData
 
 public class LandscapeAdminHelper {
 
+	private static final String INPUT_MASK = "<input>";
 	private LandscapeAdministrationPort port;
 	private Log log;
 	private String orchestraHost;
@@ -222,7 +223,10 @@ public class LandscapeAdminHelper {
 		}
 	}
 	
-	public String getLandscapeAsJson(String scenarioId, boolean hideEncryptedValue) throws IOException {
+	public String getLandscapeAsJson(String scenarioId) throws IOException {
+		return getLandscapeAsJson(scenarioId, INPUT_MASK);
+	}
+	public String getLandscapeAsJson(String scenarioId, String mask) throws IOException {
 		EmdsEpiDeclBasedataScenarioIdentifier scenario = new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(scenarioId);
 		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info = getLandscapeInfo(scenario);
 		Map<String, Map<String,String>> json = new TreeMap<>();
@@ -230,7 +234,7 @@ public class LandscapeAdminHelper {
 			GetLandscapeDataResponse data = getLandscapeData(scenario, i);
 			Map<String,String> attributes = new TreeMap<>();
 			data.getResult().stream().forEach((entryValue) -> {
-				attributes.put(entryValue.getName(), hideEncryptedValue && entryValue.getEncrypted() ? "*************************************" :entryValue.getValue());
+				attributes.put(entryValue.getName(), entryValue.getEncrypted() ? mask.replaceFirst(INPUT_MASK, entryValue.getValue()) :entryValue.getValue());
 			});
 			json.put(i.getEntryName(), attributes);
 		});
