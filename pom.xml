@@ -6,7 +6,7 @@
 
 	<groupId>com.baloise.maven</groupId>
 	<artifactId>orchestra-maven-plugin</artifactId>
-	<version>0.6.0</version>
+	<version>0.7.0</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>orchestra-maven-plugin</name>
