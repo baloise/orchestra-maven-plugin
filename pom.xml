@@ -10,34 +10,34 @@
 	<packaging>maven-plugin</packaging>
 
 	<name>orchestra-maven-plugin</name>
-	<issueManagement>
-		<system>Github</system>
-		<url>https://github.com/baloise/orchestra-maven-plugin/issues</url>
-	</issueManagement>
-	<inceptionYear>2019</inceptionYear>
 	<description>A maven plugin to manage soffico orchestra.</description>
 	<url>https://baloise.github.io/orchestra-maven-plugin/</url>
-
-	<ciManagement>
-		<system>Github Actions</system>
-		<url>https://github.com/baloise/orchestra-maven-plugin/actions</url>
-	</ciManagement>
-
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
 			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
 		</license>
 	</licenses>
-
 	<developers>
 		<developer>
 			<name>Matthias Cullmann</name>
-			<email>matthias.cullmann@baloise.ch</email>
+			<email>matthias.cullmann@baloise.com</email>
 			<organization>Baloise Group</organization>
 			<organizationUrl>http://www.baloise.com</organizationUrl>
 		</developer>
 	</developers>
+	<issueManagement>
+		<system>Github</system>
+		<url>https://github.com/baloise/orchestra-maven-plugin/issues</url>
+	</issueManagement>
+	<inceptionYear>2019</inceptionYear>
+
+	<ciManagement>
+		<system>Github Actions</system>
+		<url>https://github.com/baloise/orchestra-maven-plugin/actions</url>
+	</ciManagement>
+
+
 
 	<scm>
 		<connection>scm:git:https://github.com/baloise/orchestra-maven-plugin.git</connection>
