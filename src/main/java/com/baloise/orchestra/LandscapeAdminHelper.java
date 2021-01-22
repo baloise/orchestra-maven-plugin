@@ -12,7 +12,7 @@ import java.lang.reflect.Array;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -35,7 +35,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.Files;
 
 import emds.epi.decl.server.landscape.landscapeadministration.EmdsEpiDeclBasedataScenarioIdentifier;
 import emds.epi.decl.server.landscape.landscapeadministration.EmdsEpiDeclServerLandscapeDataLandscapeEntryValue;
@@ -50,7 +49,7 @@ import emds.epi.decl.server.landscape.landscapeadministration.StoreLandscapeData
 
 public class LandscapeAdminHelper {
 
-	private static final String INPUT_MASK = "<input>";
+	public static final String INPUT_MASK = "<input>";
 	private LandscapeAdministrationPort port;
 	private Log log;
 	private String orchestraHost;
@@ -232,10 +231,10 @@ public class LandscapeAdminHelper {
 	}
 	public String getLandscapeAsJson(String scenarioId, String mask) throws IOException {
 		Map<String, Map<String, Map<String, String>>> fullJson = new TreeMap<>();
-		fullJson.put(orchestraHost, getLandccape(scenarioId, mask));
+		fullJson.put(orchestraHost, getLandscape(scenarioId, mask));
 		return getPrettyJson(fullJson);
 	}
-	private Map<String, Map<String, String>> getLandccape(String scenarioId, String mask) {
+	private Map<String, Map<String, String>> getLandscape(String scenarioId, String mask) {
 		EmdsEpiDeclBasedataScenarioIdentifier scenario = new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(scenarioId);
 		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info = getLandscapeInfo(scenario);
 		Map<String, Map<String,String>> json = new TreeMap<>();
@@ -255,7 +254,7 @@ public class LandscapeAdminHelper {
 	}
 	
 	public static void getLandscapesAsJson(String uris, String scenarioId, String mask, File file) throws IOException {
-		Files.write(getLandscapesAsJson(uris, scenarioId, mask), file, Charset.forName("UTF-8"));
+		Files.write(file.toPath(),getLandscapesAsJson(uris, scenarioId, mask).getBytes());
 	}
 	public static String getLandscapesAsJson(String uris, String scenarioId, String mask) throws IOException {
 		Map<String, Map<String, Map<String, String>>> fullJson = new TreeMap<>();
@@ -263,7 +262,7 @@ public class LandscapeAdminHelper {
 			URL i = new URL("http://"+uri);
 			String[] usrpwd = URLDecoder.decode(i.getUserInfo(), "UTF-8").split(":", 2);
 			String host = i.getHost();
-			fullJson.put(host, new LandscapeAdminHelper(usrpwd[0], usrpwd[1], host).getLandccape(scenarioId, mask));
+			fullJson.put(host, new LandscapeAdminHelper(usrpwd[0], usrpwd[1], host).getLandscape(scenarioId, mask));
 		}
 		return getPrettyJson(fullJson);
 	}

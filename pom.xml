@@ -6,7 +6,7 @@
 
 	<groupId>com.baloise.maven</groupId>
 	<artifactId>orchestra-maven-plugin</artifactId>
-	<version>0.5.3</version>
+	<version>0.6.0</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>orchestra-maven-plugin</name>
@@ -20,7 +20,7 @@
 
 	<ciManagement>
 		<system>Github Actions</system>
-		<url>https://github.com/baloise/repository-template-java/actions</url>
+		<url>https://github.com/baloise/orchestra-maven-plugin/actions</url>
 	</ciManagement>
 
 	<licenses>

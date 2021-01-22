@@ -87,7 +87,7 @@ public class PackageMojo extends AbstractMojo {
 	private String version;
 
 	public void execute() throws MojoExecutionException {
-		if(pscFile == null) outputDirectory  = ajustOutputDir(outputDirectory);
+		if(pscFile == null) outputDirectory  = MojoHelper.ajustOutputDir(outputDirectory,getLog());
 		try {
 			File orchestraSrc = detectSourceFolder();
 			if (!orchestraSrc.isDirectory())
@@ -106,14 +106,6 @@ public class PackageMojo extends AbstractMojo {
 	boolean hasProject() {
 		// see https://github.com/apache/maven/blob/master/maven-core/src/main/resources/org/apache/maven/project/standalone.xml
 		return "standalone-pom".equals(artifactId);
-	}
-	
-	File ajustOutputDir(File outputDirectory) {
-		if(!outputDirectory.isDirectory()) {
-			getLog().info("invalid outputDir "+outputDirectory+". using cwd.");	
-			return new File(".");
-		}
-		return outputDirectory;
 	}
 	
 	public File detectSourceFolder() throws IOException {
