@@ -158,7 +158,7 @@ public class LandscapeAdminHelper {
 			storeLandscapeData(scenario, info, landscapeEntryName, landscapeEntryValues);
 		});
 		log.info("landscapes as json from the orchestra server");
-		log.info(getLandscapeAsJson(this.orchestraHost, scenarioId, true));
+		log.info(getLandscapeAsJson(scenarioId, true));
 	}
 	
 	public Log getLog() {
@@ -224,7 +224,7 @@ public class LandscapeAdminHelper {
 		}
 	}
 	
-	public String getLandscapeAsJson(String environment, String scenarioId, boolean hideEncryptedValue) throws IOException {
+	public String getLandscapeAsJson(String scenarioId, boolean hideEncryptedValue) throws IOException {
 		EmdsEpiDeclBasedataScenarioIdentifier scenario = new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(scenarioId);
 		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info = getLandscapeInfo(scenario);
 		Map<String, Map<String,String>> json = new TreeMap<>();
@@ -237,7 +237,7 @@ public class LandscapeAdminHelper {
 			json.put(i.getEntryName(), attributes);
 		});
 		Map<String, Map<String, Map<String, String>>> fullJson = new TreeMap<>();
-		fullJson.put(environment == null ? "" : environment, json);
+		fullJson.put(orchestraHost, json);
 		return getPrettyJson(fullJson);
 	}
 	private String getPrettyJson(Object json) throws JsonProcessingException {
