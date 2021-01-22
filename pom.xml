@@ -61,7 +61,7 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.version>3.3.9</maven.version>
-		<cxf.version>3.4.0</cxf.version>
+		<cxf.version>3.4.2</cxf.version>
 	</properties>
 
 	<reporting>
@@ -438,8 +438,27 @@
 								<goals>
 									<goal>jar</goal>
 								</goals>
+								<configuration>
+									<doclint>none</doclint>
+								</configuration>
 							</execution>
 						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-site-plugin</artifactId>
+						<version>3.3</version>
+						<configuration>
+							<reportPlugins>
+								<plugin>
+									<groupId>org.apache.maven.plugins</groupId>
+									<artifactId>maven-javadoc-plugin</artifactId>
+									<configuration>
+										<doclint>none</doclint>
+									</configuration>
+								</plugin>
+							</reportPlugins>
+						</configuration>
 					</plugin>
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
