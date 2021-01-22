@@ -10,6 +10,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,6 +35,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.Files;
 
 import emds.epi.decl.server.landscape.landscapeadministration.EmdsEpiDeclBasedataScenarioIdentifier;
 import emds.epi.decl.server.landscape.landscapeadministration.EmdsEpiDeclServerLandscapeDataLandscapeEntryValue;
@@ -227,6 +231,11 @@ public class LandscapeAdminHelper {
 		return getLandscapeAsJson(scenarioId, INPUT_MASK);
 	}
 	public String getLandscapeAsJson(String scenarioId, String mask) throws IOException {
+		Map<String, Map<String, Map<String, String>>> fullJson = new TreeMap<>();
+		fullJson.put(orchestraHost, getLandccape(scenarioId, mask));
+		return getPrettyJson(fullJson);
+	}
+	private Map<String, Map<String, String>> getLandccape(String scenarioId, String mask) {
 		EmdsEpiDeclBasedataScenarioIdentifier scenario = new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(scenarioId);
 		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info = getLandscapeInfo(scenario);
 		Map<String, Map<String,String>> json = new TreeMap<>();
@@ -238,13 +247,25 @@ public class LandscapeAdminHelper {
 			});
 			json.put(i.getEntryName(), attributes);
 		});
-		Map<String, Map<String, Map<String, String>>> fullJson = new TreeMap<>();
-		fullJson.put(orchestraHost, json);
-		return getPrettyJson(fullJson);
+		return json;
 	}
-	private String getPrettyJson(Object json) throws JsonProcessingException {
-		ObjectMapper mapper = new ObjectMapper();
-		return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
+	
+	private static String getPrettyJson(Object json) throws JsonProcessingException {
+		return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(json);
+	}
+	
+	public static void getLandscapesAsJson(String uris, String scenarioId, String mask, File file) throws IOException {
+		Files.write(getLandscapesAsJson(uris, scenarioId, mask), file, Charset.forName("UTF-8"));
+	}
+	public static String getLandscapesAsJson(String uris, String scenarioId, String mask) throws IOException {
+		Map<String, Map<String, Map<String, String>>> fullJson = new TreeMap<>();
+		for (String uri : uris.split(";")) {
+			URL i = new URL("http://"+uri);
+			String[] usrpwd = URLDecoder.decode(i.getUserInfo(), "UTF-8").split(":", 2);
+			String host = i.getHost();
+			fullJson.put(host, new LandscapeAdminHelper(usrpwd[0], usrpwd[1], host).getLandccape(scenarioId, mask));
+		}
+		return getPrettyJson(fullJson);
 	}
 	
 }
