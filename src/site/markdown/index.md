@@ -10,19 +10,7 @@ The design goals are
 
 Prerequisite
 
-- Maven is working. That's all. No pom.xml required.
-- add jcenter repo to your maven settings
-
-```
-<pluginRepository>
-    <snapshots>
-        <enabled>false</enabled>
-    </snapshots>
-    <id>bintray</id>
-    <name>bintray</name>
-    <url>http://jcenter.bintray.com</url>
-</pluginRepository>
-```
+- Maven is working. That's all. No pom.xml required. Plugin is distributed via [Maven Central](https://repo1.maven.org/maven2/com/baloise/maven/orchestra-maven-plugin/).
 
 ... to be completed
 
