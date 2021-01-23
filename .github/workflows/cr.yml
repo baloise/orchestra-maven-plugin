@@ -23,4 +23,10 @@ jobs:
             BAOPSO_GPG_46948F68_PASSPHRASE : ${{ secrets.BAOPSO_GPG_46948F68_PASSPHRASE }}
             OSSRH_PWD_TOKEN : ${{ secrets.OSSRH_PWD_TOKEN }}
             OSSRH_USER_TOKEN : ${{ secrets.OSSRH_USER_TOKEN }}
-        run: mvn -V -B --no-transfer-progress --settings .github/maven-settings.xml -P release clean deploy
+        run: mvn -V -B --no-transfer-progress --settings .github/maven-settings.xml -P release clean site deploy
+      - name: Deploy site
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: gh-pages 
+          FOLDER: target/site
