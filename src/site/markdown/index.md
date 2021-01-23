@@ -46,5 +46,4 @@ https://dl.bintray.com/baopso/mvn/com/baloise/maven/orchestra-maven-plugin/0.5.2
 
 If you are looking for other files, feel free to have a look at the [bintray maven repository](https://bintray.com/baopso/mvn/orchestra-maven-plugin/) and cherry pick 🍒.
 
-![CI](https://github.com/baloise/orchestra-maven-plugin/workflows/CI/badge.svg)
-![Release](https://github.com/baloise/orchestra-maven-plugin/workflows/Release/badge.svg)
+![Continuous Release](https://github.com/baloise/orchestra-maven-plugin/workflows/CR/badge.svg)
