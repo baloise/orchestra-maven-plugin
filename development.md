@@ -14,4 +14,6 @@ Any [-SNAPSHOT](https://maven.apache.org/guides/getting-started/#What_is_a_SNAPS
 Any release will be published to [maven central](https://repo1.maven.org/maven2/com/baloise/).
 
 
-⚠ Please note that you can only push a release once, as it can not be overwritten. Don't forget to increment the POM version after release see [example commit 2cda17](https://github.com/baloise/orchestra-maven-plugin/commit/2cda17d2fd23d963733b46b019a04430e526467e). You may find the [maven-release-plugin](https://maven.apache.org/maven-release/maven-release-plugin/examples/prepare-release.html) helpful. 
+⚠ Please note that you can only push a release once, as it can not be overwritten. Don't forget to increment the POM version after release see [example commit 2cda17](https://github.com/baloise/orchestra-maven-plugin/commit/2cda17d2fd23d963733b46b019a04430e526467e). 
+
+You may find the [maven-release-plugin](https://maven.apache.org/maven-release/maven-release-plugin/examples/prepare-release.html) helpful. I personally like to have a look on the local changes before pushing and use something like `mvn --batch-mode release:clean release:prepare -DpushChanges=false -DtagNameFormat="@{project.version}"`, so I can always `git reset --hard origin/master` in case. 
