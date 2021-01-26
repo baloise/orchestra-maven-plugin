@@ -3,6 +3,14 @@
 To refresh WSDL from local orchestra installation:
    - mvn -Pfetch-wsdl -Dorchestra.soapclient.orchestraurl=<URL TO YOUR ORCHESTRA INSTANCE>/
 
+# Local development
+
+Install with `mvn -DgeneratePom=true -DcreateChecksum=true install`
+
+
+and run fully qualified (and offline) like `mvn -o com.baloise.maven:orchestra-maven-plugin:0.7.2-SNAPSHOT:help`
+
+
 # Release the plugin maven central
 
 you need update the [pom version](https://github.com/baloise/orchestra-maven-plugin/blob/master/pom.xml#L11) and push to any branch to trigger the [release pipeline](https://github.com/baloise/orchestra-maven-plugin/actions?query=workflow%3ACR).
