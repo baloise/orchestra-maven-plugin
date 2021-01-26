@@ -77,10 +77,15 @@ public class LandscapeMojo extends AbstractMojo {
 	/**
 	 * @since 0.7.2
 	 */
-	@Parameter(defaultValue = "NONE", property = "maskEncoding", required = true)
+	@Parameter(defaultValue = "NONE", property = "maskEncoding", required = false)
 	private Encoding maskEncoding;
 
 	public void execute() throws MojoExecutionException {
+		if(getLog().isDebugEnabled()) {
+			getLog().debug("Mask is " + mask);
+			getLog().debug("MaskEncoding is " + maskEncoding);
+			getLog().debug("decoded Mask is " + maskEncoding.decode(mask));
+		}
 		outputDirectory = MojoHelper.ajustOutputDir(outputDirectory, getLog());
 		try {
 			File landscapeFile = new File(outputDirectory, scenarioId + ".json");
