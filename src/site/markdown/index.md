@@ -42,8 +42,8 @@ currently the following use cases are supported
 
 You can just reuse the soap client and helper methods in a small library without dependencies on maven, i.e
 
-https://dl.bintray.com/baopso/mvn/com/baloise/maven/orchestra-maven-plugin/0.5.2/orchestra-maven-plugin-0.5.2-lib.jar
+https://repo1.maven.org/maven2/com/baloise/maven/orchestra-maven-plugin/0.7.3/orchestra-maven-plugin-0.7.3-lib.jar
 
-If you are looking for other files, feel free to have a look at the [bintray maven repository](https://bintray.com/baopso/mvn/orchestra-maven-plugin/) and cherry pick 🍒.
+If you are looking for other files, feel free to have a look at the maven [release](https://repo1.maven.org/maven2/com/baloise/maven/orchestra-maven-plugin/) and [snapshot](https://oss.sonatype.org/content/repositories/snapshots/com/baloise/maven/orchestra-maven-plugin/) repositories and cherry pick 🍒.
 
 ![Continuous Release](https://github.com/baloise/orchestra-maven-plugin/workflows/CR/badge.svg)
