@@ -31,6 +31,7 @@ import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
 import com.baloise.common.FactoryHashMap;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -226,6 +227,7 @@ public class LandscapeAdminHelper {
 		}
 	}
 	
+	
 	public String getLandscapeAsJson(String scenarioId) throws IOException {
 		return getLandscapeAsJson(scenarioId, INPUT_MASK);
 	}
@@ -250,7 +252,9 @@ public class LandscapeAdminHelper {
 	}
 	
 	private static String getPrettyJson(Object json) throws JsonProcessingException {
-		return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(json);
+		return new ObjectMapper()
+				.setSerializationInclusion(Include.NON_NULL)
+				.writerWithDefaultPrettyPrinter().writeValueAsString(json);
 	}
 	
 	public static void getLandscapesAsJson(String uris, String scenarioId, String mask, File file) throws IOException {
