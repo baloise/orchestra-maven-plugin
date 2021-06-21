@@ -57,6 +57,7 @@ public class LandscapeMojo extends AbstractMojo {
 	private File outputDirectory;
 
 	/**
+	 * separated by semicolon
 	 * @since 0.6.0
 	 */
 	@Parameter(property = "uris", required = true)
