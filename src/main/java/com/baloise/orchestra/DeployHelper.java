@@ -3,17 +3,27 @@ package com.baloise.orchestra;
 import static com.baloise.orchestra.DeployHelper.DeploymentType.Deployment;
 import static com.baloise.orchestra.DeployHelper.DeploymentType.Redeployment;
 import static java.lang.String.format;
+import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.ws.BindingProvider;
 
@@ -62,16 +72,38 @@ public class DeployHelper {
 	
 
 	public DeployHelper(String user, String password, String orchestraHost) {
-		this(user, password, Lambda.run(()->new URI(format("https://%s:8443", orchestraHost))));
+		this(
+				user, 
+				password, 
+				Stream.of(orchestraHost.split(",")).map(host -> Lambda.run(()->new URI(format("https://%s:8443", host))) ).collect(toList())
+				);
 	}
+	
 	public DeployHelper(String user, String password, URI orchestraServer) {
-		DeploymentService dserv = new DeploymentService(Lambda.run(()-> orchestraServer.resolve("/OrchestraRemoteService/DeploymentService/Service?wsdl").toURL())) ;
-		port = dserv.getPort(DeploymentServicePort.class);
-
-		BindingProvider prov = (BindingProvider) port;
-		prov.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, user);
-		prov.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, password);
+		this(user, password, singletonList(orchestraServer));
+		
+	}
+	
+	public DeployHelper(String user, String password, List<URI> orchestraServers) {
 		log = Log.DEFAULT;
+		Collections.shuffle(orchestraServers);
+		for (URI orchestraServer : orchestraServers) {
+			try {
+				URL wsdlURL = Lambda.run(()-> orchestraServer.resolve("/OrchestraRemoteService/DeploymentService/Service?wsdl").toURL());
+				DeploymentService dserv = new DeploymentService(wsdlURL) ;
+				port = dserv.getPort(DeploymentServicePort.class);
+				
+				BindingProvider prov = (BindingProvider) port;
+				prov.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, user);
+				prov.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, password);
+				
+			} catch (Exception e) {
+				log.info(format("Server %s not reachable : %s", orchestraServer, e.getMessage()));
+			}
+		}
+		if(port == null) {
+			throw new IllegalArgumentException(format("Could not reach any of the following servers: %s", orchestraServers));
+		}
 	}
 
 	public String deploy(File psc) throws IOException {
