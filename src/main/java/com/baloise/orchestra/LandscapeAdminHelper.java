@@ -70,7 +70,7 @@ public class LandscapeAdminHelper {
 	
 
 	public LandscapeAdminHelper(String user, String password, String orchestraHost) {
-		this(user, password, Lambda.run(()->new URI(format("http://%s:8019", orchestraHost))));
+		this(user, password, Lambda.run(()->new URI(format("https://%s:8443", orchestraHost))));
 		this.orchestraHost = orchestraHost;
 	}
 	public LandscapeAdminHelper(String user, String password, URI orchestraServer) {

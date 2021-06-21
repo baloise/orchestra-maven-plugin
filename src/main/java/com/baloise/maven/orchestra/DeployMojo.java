@@ -19,7 +19,7 @@ import com.baloise.orchestra.LandscapeAdminHelper;
 /**
  * Deploys ( or redeploys ) a scenario ( PSC file ).<br/><br/>
  * Example usage:
- * <pre>mvn com.baloise.maven:orchestra-maven-plugin scenario-deploy -Duser=admin -Dpassword=*** -Dserver=https://orchestra.example.com:8019 -DpscFile=/tmp/my.psc -landscapeFile=/tmp/landscape.json</pre>
+ * <pre>mvn com.baloise.maven:orchestra-maven-plugin scenario-deploy -Duser=admin -Dpassword=*** -Dserver=https://orchestra.example.com:8443 -DpscFile=/tmp/my.psc -landscapeFile=/tmp/landscape.json</pre>
  * If you use a pom.xml feel free to omit <i>pscFile</i><br/>
  */
 @Mojo(name = "scenario-deploy", defaultPhase = LifecyclePhase.NONE, requiresProject = false)
@@ -111,7 +111,8 @@ public class DeployMojo extends AbstractMojo {
 	/**
 	 * Full server URL with protocol and web service port.<br/>
 	 * Please note the web UI and web service do not run on the same port.<br/>
-	 * Example: <i>https://orchestra.example.com:8019</i>
+	 * Example: <i>https://orchestra.example.com:8443</i>
+	 * Example: <i>https://orchestra.example.com:8443</i>
 	 * @since 0.4.0 
 	 */
 	@Parameter(property = "server", required = true)

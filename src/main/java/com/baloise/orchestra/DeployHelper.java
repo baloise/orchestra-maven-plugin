@@ -62,7 +62,7 @@ public class DeployHelper {
 	
 
 	public DeployHelper(String user, String password, String orchestraHost) {
-		this(user, password, Lambda.run(()->new URI(format("http://%s:8019", orchestraHost))));
+		this(user, password, Lambda.run(()->new URI(format("https://%s:8443", orchestraHost))));
 	}
 	public DeployHelper(String user, String password, URI orchestraServer) {
 		DeploymentService dserv = new DeploymentService(Lambda.run(()-> orchestraServer.resolve("/OrchestraRemoteService/DeploymentService/Service?wsdl").toURL())) ;
