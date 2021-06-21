@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -260,13 +261,20 @@ public class LandscapeAdminHelper {
 	public static void getLandscapesAsJson(String uris, String scenarioId, String mask, File file) throws IOException {
 		Files.write(file.toPath(),getLandscapesAsJson(uris, scenarioId, mask).getBytes());
 	}
+	
+	
+	static String[] parseURI(String uri) throws IOException {
+		URL i = new URL("http://"+uri);
+		String[] usrpwd = URLDecoder.decode(i.getUserInfo(), "UTF-8").split(":", 2);
+		String host = i.getHost();
+		return new String[] {usrpwd[0], usrpwd[1], host};
+	}
+	
 	public static String getLandscapesAsJson(String uris, String scenarioId, String mask) throws IOException {
 		Map<String, Map<String, Map<String, String>>> fullJson = new TreeMap<>();
 		for (String uri : uris.split(";")) {
-			URL i = new URL("http://"+uri);
-			String[] usrpwd = URLDecoder.decode(i.getUserInfo(), "UTF-8").split(":", 2);
-			String host = i.getHost();
-			fullJson.put(host, new LandscapeAdminHelper(usrpwd[0], usrpwd[1], host).getLandscape(scenarioId, mask));
+			String[] usrpwdhost = parseURI(uri);
+			fullJson.put(usrpwdhost[2], new LandscapeAdminHelper(usrpwdhost[0], usrpwdhost[1], usrpwdhost[2]).getLandscape(scenarioId, mask));
 		}
 		return getPrettyJson(fullJson);
 	}
