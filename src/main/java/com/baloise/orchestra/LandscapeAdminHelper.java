@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -49,40 +50,32 @@ import emds.epi.decl.server.landscape.landscapeadministration.LandscapeAdministr
 import emds.epi.decl.server.landscape.landscapeadministration.LandscapeAdministrationPort;
 import emds.epi.decl.server.landscape.landscapeadministration.StoreLandscapeDataRequest;
 
-public class LandscapeAdminHelper {
+public class LandscapeAdminHelper extends HelperBase<LandscapeAdministrationPort>{
 
 	public static final String INPUT_MASK = "<input>";
-	private LandscapeAdministrationPort port;
-	private Log log;
-	private String orchestraHost;
 	
-	
-	@FunctionalInterface
-	private static interface Lambda<T> {
-	    T call() throws Exception;
-	    static <T> T run(Lambda<T> p) {
-	    	try {
-	    		return p.call();
-	    	} catch (Exception e) {
-	    		throw new IllegalArgumentException(e);
-	    	}
-	    }
+	public LandscapeAdminHelper(String user, String password, List<URL> orchestraServers) {
+		super(user, password, orchestraServers);
 	}
-	
 
 	public LandscapeAdminHelper(String user, String password, String orchestraHost) {
-		this(user, password, Lambda.run(()->new URI(format("https://%s:8443", orchestraHost))));
-		this.orchestraHost = orchestraHost;
+		super(user, password, orchestraHost);
 	}
-	public LandscapeAdminHelper(String user, String password, URI orchestraServer) {
-		LandscapeAdministration dserv = new LandscapeAdministration(Lambda.run(()-> orchestraServer.resolve("/OrchestraRemoteService/LandscapeAdmin/Service?wsdl").toURL())) ;
-		port = dserv.getPort(LandscapeAdministrationPort.class);
 
-		BindingProvider prov = (BindingProvider) port;
-		prov.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, user);
-		prov.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, password);
-		log = Log.DEFAULT;
+	public LandscapeAdminHelper(String user, String password, URL orchestraServer) {
+		super(user, password, orchestraServer);
 	}
+	
+	@Override
+	String getWsdlPath() {
+		return "/OrchestraRemoteService/LandscapeAdmin/Service?wsdl";
+	}
+	
+	@Override
+	LandscapeAdministrationPort getPort(URL wsdlUrl) {
+		return new LandscapeAdministration(wsdlUrl).getPort(LandscapeAdministrationPort.class);
+	}
+
 	
 	private Map<String, Map<String, String>> map(INIConfiguration ini) {
 		FactoryHashMap<String, Map<String, String>> ret = FactoryHashMap.create(()-> new HashMap<String, String>());
@@ -93,7 +86,7 @@ public class LandscapeAdminHelper {
 				String key = keys.next().toLowerCase();
 				Map<String, String> values = ret.get(key);
 				if(values.put(key, landscapeEntryValues.getString(key)) != null) {
-					log.warn("overwriting " +key);
+					getLog().warn("overwriting " +key);
 				}
 			}
 		}
@@ -114,7 +107,7 @@ public class LandscapeAdminHelper {
 		try {
 			results = mapper.readValue(jsonFile, new TypeReference<Map<String, Object>>() { } );
 		} catch (Exception e) {
-			log.error(e.getMessage() + " while parsing " + filePath);
+			getLog().error(e.getMessage() + " while parsing " + filePath);
 			throw e;
 		}
 		
@@ -123,7 +116,7 @@ public class LandscapeAdminHelper {
 				results = (Map<String, Object>) results.get(pathElement);
 				if(results == null) {
 					String message = format("JSON path element '%s' not found in %s", pathElement, filePath);
-					log.error(message);
+					getLog().error(message);
 					throw new IOException(message);
 				}
 			}
@@ -139,7 +132,7 @@ public class LandscapeAdminHelper {
 						Arrays.stream((Object[]) value).map(Objects::toString).collect(Collectors.joining(", ")) :
 						value.toString();	
 				if(values.put(key, stringValue) != null) {
-					log.warn("overwriting " +key);
+					getLog().warn("overwriting " +key);
 				}
 			});
 		});
@@ -150,7 +143,7 @@ public class LandscapeAdminHelper {
 	private void checkFileExists(String filePath, File jsonFile) throws FileNotFoundException {
 		if(!jsonFile.exists()) {
 			String message = filePath + " not found";
-			log.error(message);
+			getLog().error(message);
 			throw new FileNotFoundException(message);
 		}
 	}
@@ -160,13 +153,9 @@ public class LandscapeAdminHelper {
 
 		Map<String, EmdsEpiDeclServerLandscapeDataLandscapeInfo> info = getLandscapeInfo(scenario);
 		params.forEach((landscapeEntryName , landscapeEntryValues)-> {
-			log.info("configuring " + landscapeEntryName);
+			getLog().info("configuring " + landscapeEntryName);
 			storeLandscapeData(scenario, info, landscapeEntryName, landscapeEntryValues);
 		});
-	}
-	
-	public Log getLog() {
-		return log;
 	}
 	
 	private void storeLandscapeData(EmdsEpiDeclBasedataScenarioIdentifier scenario,
@@ -175,7 +164,7 @@ public class LandscapeAdminHelper {
 		
 		EmdsEpiDeclServerLandscapeDataLandscapeInfo theInfo = info.get(landscapeEntryName);
 		if(theInfo == null) {
-			log.accept(format("WARNING - landscape not found : '%s'", landscapeEntryName));
+			getLog().accept(format("WARNING - landscape not found : '%s'", landscapeEntryName));
 			return;
 		}
 		GetLandscapeDataResponse landscapeDataResponse = getLandscapeData(scenario, theInfo);
@@ -187,7 +176,7 @@ public class LandscapeAdminHelper {
 			if(value!= null) {
 				value.setValue(newValue);
 			} else {
-				log.info(format("WARNING - key not found : '%s'", key));
+				getLog().info(format("WARNING - key not found : '%s'", key));
 			}
 		});
 		
@@ -211,8 +200,7 @@ public class LandscapeAdminHelper {
 	
 	
 	public LandscapeAdminHelper withLog(Log log) {
-		this.log = log;
-		return this;
+		return super.withLog(log);
 	}
 	
 	public void deploy(String scenarioId, String landscapeURI) throws IOException {

@@ -3,29 +3,20 @@ package com.baloise.orchestra;
 import static com.baloise.orchestra.DeployHelper.DeploymentType.Deployment;
 import static com.baloise.orchestra.DeployHelper.DeploymentType.Redeployment;
 import static java.lang.String.format;
-import static java.util.Collections.singleton;
-import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparing;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URI;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLConnection;
+import java.net.URL;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import javax.xml.ws.BindingProvider;
 
 import emds.epi.decl.server.deployment.deploymentservice.ActivateScenarioRequest;
 import emds.epi.decl.server.deployment.deploymentservice.AquireDeploymentTokenRequest;
@@ -44,72 +35,47 @@ import emds.epi.decl.server.deployment.deploymentservice.GetScenarioInfoRequest;
 import emds.epi.decl.server.deployment.deploymentservice.GetScenarioInfoResponse;
 import emds.epi.decl.server.deployment.deploymentservice.ReDeployScenarioCallbackRequest;
 
-public class DeployHelper {
+public class DeployHelper extends HelperBase<DeploymentServicePort> {
 
+	public DeployHelper(String user, String password, List<URL> orchestraServers) {
+		super(user, password, orchestraServers);
+	}
+
+	public DeployHelper(String user, String password, String orchestraHost) {
+		super(user, password, orchestraHost);
+	}
+
+	public DeployHelper(String user, String password, URL orchestraServer) {
+		super(user, password, orchestraServer);
+	}
+
+	@Override
+	public DeployHelper withLog(Log log) {
+		return super.withLog(log);
+	}
+	
+	@Override
+	String getWsdlPath() {
+		return "/OrchestraRemoteService/DeploymentService/Service?wsdl";
+	}
+	
+	@Override
+	DeploymentServicePort getPort(URL wsdlURL) {
+		return new DeploymentService(wsdlURL).getPort(DeploymentServicePort.class);
+	}
+	
 	static enum DeploymentType {
 		Deployment, Redeployment
 	}
 	
-	private DeploymentServicePort port;
 	private EmdsEpiDeclServerDeploymentDataDeploymentToken token;
 	private int retryCount = 30;
 	private long retryDelayMillies = 1000;
-	private Log log;
 	private String comment;
 	
-	
-	@FunctionalInterface
-	private static interface Lambda<T> {
-	    T call() throws Exception;
-	    static <T> T run(Lambda<T> p) {
-	    	try {
-	    		return p.call();
-	    	} catch (Exception e) {
-	    		throw new IllegalArgumentException(e);
-	    	}
-	    }
-	}
-	
-
-	public DeployHelper(String user, String password, String orchestraHost) {
-		this(
-				user, 
-				password, 
-				Stream.of(orchestraHost.split(",")).map(host -> Lambda.run(()->new URI(format("https://%s:8443", host))) ).collect(toList())
-				);
-	}
-	
-	public DeployHelper(String user, String password, URI orchestraServer) {
-		this(user, password, singletonList(orchestraServer));
-		
-	}
-	
-	public DeployHelper(String user, String password, List<URI> orchestraServers) {
-		log = Log.DEFAULT;
-		Collections.shuffle(orchestraServers);
-		for (URI orchestraServer : orchestraServers) {
-			try {
-				URL wsdlURL = Lambda.run(()-> orchestraServer.resolve("/OrchestraRemoteService/DeploymentService/Service?wsdl").toURL());
-				DeploymentService dserv = new DeploymentService(wsdlURL) ;
-				port = dserv.getPort(DeploymentServicePort.class);
-				
-				BindingProvider prov = (BindingProvider) port;
-				prov.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, user);
-				prov.getRequestContext().put(BindingProvider.PASSWORD_PROPERTY, password);
-				
-			} catch (Exception e) {
-				log.info(format("Server %s not reachable : %s", orchestraServer, e.getMessage()));
-			}
-		}
-		if(port == null) {
-			throw new IllegalArgumentException(format("Could not reach any of the following servers: %s", orchestraServers));
-		}
-	}
-
 	public String deploy(File psc) throws IOException {
 		return deploy(psc, false);
 	}
-	
 
 	public DeployHelper withRetryCount(int retryCount) {
 		this.retryCount = retryCount;
@@ -119,14 +85,6 @@ public class DeployHelper {
 	public DeployHelper withRetryDelayMillies(long retryDelayMillies) {
 		this.retryDelayMillies = retryDelayMillies;
 		return this;
-	}
-	public DeployHelper withLog(Log log) {
-		this.log = log;
-		return this;
-	}
-	
-	public Log getLog() {
-		return log;
 	}
 
 	public String deploy(File psc, boolean autostart) throws IOException {
@@ -151,7 +109,6 @@ public class DeployHelper {
 		return uuid;
 	}
 
-
 	private void stopScenario(String uuid) {
 		port.deActivateScenario(new DeActivateScenarioRequest().withToken(token).withScenarioID(new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(uuid)));
 	}
@@ -169,7 +126,6 @@ public class DeployHelper {
 				.withScenarioID(new EmdsEpiDeclBasedataScenarioIdentifier().withScenario(uuid))
 				);
 	}
-	
 
 	private void requestDeploy(File psc) throws IOException {
 		port.deployScenarioCallback(
@@ -218,18 +174,18 @@ public class DeployHelper {
 		        }
 		        if(descs.stream().filter(d -> isSuccess(d, deploymentType.name())).findAny().isPresent())
 		        	return;
-		        log.info(format("waiting for deployment to finish : %s attempts left ", retry));
+		        getLog().info(format("waiting for deployment to finish : %s attempts left ", retry));
 	        	retry--;
 	        	sleep();
 			}
 	        throw new IOException(format("no success message from orchestra after %s attempts", retryCount));
         } finally {
         	if(res != null) {
-        		log.info("DATE                -                   ORIGINATOR (CATEGORY) : DESCRIPTION ");
+        		getLog().info("DATE                -                   ORIGINATOR (CATEGORY) : DESCRIPTION ");
         		res.stream()
         				.sorted(comparing(EmdsEpiDeclServerDeploymentDataDeploymentInfo::getDate))
         				.map(this::formatInfo)
-        				.forEach(log);
+        				.forEach(getLog());
         	}
 		}
 	}

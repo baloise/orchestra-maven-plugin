@@ -116,20 +116,20 @@ public class DeployMojo extends AbstractMojo {
 	 * @since 0.4.0 
 	 */
 	@Parameter(property = "server", required = true)
-	private String server;
+	private String servers;
 	
 	public void execute() throws MojoExecutionException {
 		try {
-			DeployHelper deployHelper = new DeployHelper(user, password, new URI(server))
+			DeployHelper deployHelper = new DeployHelper(user, password, servers)
 					.withComment(comment)
 					.withLog(new ApacheLogWrapper(getLog()))
 					.withRetryDelayMillies(retryDelayMillies)
 					.withRetryCount(retryCount);
 			File pscFileLocation = getPscFileLocation(outputDirectory, artifactId, version, pscFile);
-			getLog().info(format("deploying %s to %s", pscFileLocation, server));
+			getLog().info(format("deploying %s to %s", pscFileLocation, servers));
 			String scenarioId = deployHelper.deploy(pscFileLocation);
 			if(landscapeFile!=null) {
-				LandscapeAdminHelper landscapeHelper = new LandscapeAdminHelper(user, password, new URI(server)).withLog(deployHelper.getLog());
+				LandscapeAdminHelper landscapeHelper = new LandscapeAdminHelper(user, password, servers).withLog(deployHelper.getLog());
 				landscapeHelper.deploy(scenarioId, landscapeFile);
 			}
 		} catch (Exception e) {
