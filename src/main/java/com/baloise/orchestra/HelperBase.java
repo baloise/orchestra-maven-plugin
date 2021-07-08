@@ -25,6 +25,7 @@ abstract class HelperBase<T> {
 	T port;
 	private Log log;
 	String orchestraHost;
+	String protocol;
 	
 	@FunctionalInterface
 	private static interface Lambda<T> {
@@ -66,6 +67,7 @@ abstract class HelperBase<T> {
 	
 	
 	abstract String getWsdlPath() ;
+	//TODO refactor
 	abstract T getPort(URL wsdlURL);
 	
 	public HelperBase(String user, String password, List<URL> orchestraServers) {
@@ -74,7 +76,9 @@ abstract class HelperBase<T> {
 		for (URL orchestraServer : orchestraServers) {
 			try {
 				orchestraHost = orchestraServer.getHost();
+				protocol = orchestraServer.getProtocol().toLowerCase();
 				URL wsdlURL = orchestraServer.toURI().resolve(getWsdlPath()).toURL();
+				log.debug("trying to establish connection to "+ wsdlURL);
 				port = getPort(wsdlURL);
 				BindingProvider prov = (BindingProvider) port;
 				prov.getRequestContext().put(BindingProvider.USERNAME_PROPERTY, user);
@@ -86,7 +90,7 @@ abstract class HelperBase<T> {
 				log.info(format("Server %s not reachable : %s", orchestraServer, e.getMessage()));
 			}
 			if(port != null) {
-				getLog().info("orchestra host is "+orchestraHost);
+				getLog().info(format("orchestra host is %s://%s",protocol, orchestraHost));
 				break;
 			}
 		}

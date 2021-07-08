@@ -8,15 +8,15 @@ import static java.util.stream.Collectors.toSet;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import javax.xml.namespace.QName;
 
 import emds.epi.decl.server.deployment.deploymentservice.ActivateScenarioRequest;
 import emds.epi.decl.server.deployment.deploymentservice.AquireDeploymentTokenRequest;
@@ -61,7 +61,17 @@ public class DeployHelper extends HelperBase<DeploymentServicePort> {
 	
 	@Override
 	DeploymentServicePort getPort(URL wsdlURL) {
-		return new DeploymentService(wsdlURL).getPort(DeploymentServicePort.class);
+		//TODO refactor
+		DeploymentService service = new DeploymentService(wsdlURL);
+		Iterator<QName> ports = service.getPorts();
+		
+		while(ports.hasNext()) {
+			QName n = ports.next();
+			port = service.getPort(n, DeploymentServicePort.class);
+			if(port.toString().toLowerCase().contains(protocol)) return port;
+		}
+		
+		throw new IllegalStateException("no port found with protocol: "+ protocol);
 	}
 	
 	static enum DeploymentType {

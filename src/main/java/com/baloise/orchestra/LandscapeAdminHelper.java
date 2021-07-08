@@ -9,8 +9,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.file.Files;
@@ -25,7 +23,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.xml.ws.BindingProvider;
+import javax.xml.namespace.QName;
 
 import org.apache.commons.configuration2.INIConfiguration;
 import org.apache.commons.configuration2.SubnodeConfiguration;
@@ -72,8 +70,18 @@ public class LandscapeAdminHelper extends HelperBase<LandscapeAdministrationPort
 	}
 	
 	@Override
-	LandscapeAdministrationPort getPort(URL wsdlUrl) {
-		return new LandscapeAdministration(wsdlUrl).getPort(LandscapeAdministrationPort.class);
+	LandscapeAdministrationPort getPort(URL wsdlURL) {
+		//TODO refactor
+		LandscapeAdministration service = new LandscapeAdministration(wsdlURL);
+		Iterator<QName> ports = service.getPorts();
+		
+		while(ports.hasNext()) {
+			QName n = ports.next();
+			port = service.getPort(n, LandscapeAdministrationPort.class);
+			if(port.toString().toLowerCase().contains(protocol)) return port;
+		}
+		
+		throw new IllegalStateException("no port found with protocol: "+ protocol);
 	}
 
 	
