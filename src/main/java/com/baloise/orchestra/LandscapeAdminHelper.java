@@ -65,25 +65,9 @@ public class LandscapeAdminHelper extends HelperBase<LandscapeAdministrationPort
 	}
 	
 	@Override
-	String getWsdlPath() {
-		return "/OrchestraRemoteService/LandscapeAdmin/Service?wsdl";
+	String getServicePath() {
+		return "/OrchestraRemoteService/LandscapeAdmin/Service";
 	}
-	
-	@Override
-	LandscapeAdministrationPort getPort(URL wsdlURL) {
-		//TODO refactor
-		LandscapeAdministration service = new LandscapeAdministration(wsdlURL);
-		Iterator<QName> ports = service.getPorts();
-		
-		while(ports.hasNext()) {
-			QName n = ports.next();
-			port = service.getPort(n, LandscapeAdministrationPort.class);
-			if(port.toString().toLowerCase().contains(protocol)) return port;
-		}
-		
-		throw new IllegalStateException("no port found with protocol: "+ protocol);
-	}
-
 	
 	private Map<String, Map<String, String>> map(INIConfiguration ini) {
 		FactoryHashMap<String, Map<String, String>> ret = FactoryHashMap.create(()-> new HashMap<String, String>());
@@ -132,7 +116,7 @@ public class LandscapeAdminHelper extends HelperBase<LandscapeAdministrationPort
 		
 		results.forEach((section,props) -> {
 			Map<String, String> values = ret.get(section);
-			Map<String, Object> vm = Map.class.isAssignableFrom(props.getClass()) ? (Map) props : singletonMap("VALUE", props);
+			Map<String, Object> vm = Map.class.isAssignableFrom(props.getClass()) ? (Map<String, Object>) props : singletonMap("VALUE", props);
 			vm.forEach((key,value) -> {
 				key = key.toLowerCase();
 				String stringValue =

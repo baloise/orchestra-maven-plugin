@@ -55,23 +55,8 @@ public class DeployHelper extends HelperBase<DeploymentServicePort> {
 	}
 	
 	@Override
-	String getWsdlPath() {
-		return "/OrchestraRemoteService/DeploymentService/Service?wsdl";
-	}
-	
-	@Override
-	DeploymentServicePort getPort(URL wsdlURL) {
-		//TODO refactor
-		DeploymentService service = new DeploymentService(wsdlURL);
-		Iterator<QName> ports = service.getPorts();
-		
-		while(ports.hasNext()) {
-			QName n = ports.next();
-			port = service.getPort(n, DeploymentServicePort.class);
-			if(port.toString().toLowerCase().contains(protocol)) return port;
-		}
-		
-		throw new IllegalStateException("no port found with protocol: "+ protocol);
+	String getServicePath() {
+		return "/OrchestraRemoteService/DeploymentService/Service";
 	}
 	
 	static enum DeploymentType {
